@@ -138,13 +138,13 @@ python3 server.py --verbose  # Mac/Linux
 python server.py --verbose   # Windows
 ```
 
-The server will start on `http://localhost:8000`
+The server will start on `http://localhost:8887`
 
 **Note:** The `chmod` command is only needed on Mac/Linux to make scripts executable. Windows doesn't use this permission system.
 
 ### 5. Open Browser
 
-Navigate to `http://localhost:8000` in your web browser.
+Navigate to `http://localhost:8887` in your web browser.
 
 ## Using the Web Interface
 
@@ -316,7 +316,7 @@ Python was chosen because:
 
 ### 3. Server API Endpoints
 
-All endpoints accessible at `http://localhost:8000/api/`
+All endpoints accessible at `http://localhost:8887/api/`
 
 - **GET /api/status** - Server status and configuration
   ```json
@@ -384,7 +384,7 @@ Polling-based status updates for install progress. Package information is cached
 ### Server Won't Start
 
 **Port already in use:**
-The server will automatically try ports 8000-8010. If all are in use:
+The server will automatically try ports 8887-8897. If all are in use:
 ```bash
 python3 server.py --port 9000
 ```

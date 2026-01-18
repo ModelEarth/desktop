@@ -90,7 +90,7 @@ echo "✓ Scripts are now executable"
 echo ""
 
 # Check desktop.conf
-echo "📦 Checking package configuration..."
+echo "📦 Checking app configuration..."
 if [ ! -f "desktop.conf" ]; then
     echo "✗ desktop.conf not found!"
     exit 1
@@ -99,7 +99,7 @@ fi
 ENABLED_COUNT=$(grep -v "^#" desktop.conf | grep -v "^$" | wc -l | tr -d ' ')
 TOTAL_COUNT=$(grep -v "^$" desktop.conf | wc -l | tr -d ' ')
 
-echo "✓ Found $TOTAL_COUNT packages ($ENABLED_COUNT enabled)"
+echo "✓ Found $TOTAL_COUNT apps ($ENABLED_COUNT enabled)"
 
 echo ""
 echo "╔═══════════════════════════════════════════════════════════╗"
@@ -112,19 +112,18 @@ echo "1. Start the server:"
 echo "   $PYTHON server.py"
 echo ""
 echo "2. Open your browser to:"
-echo "   http://localhost:8000"
+echo "   http://localhost:8887"
 echo ""
 echo "3. Or use the command line:"
 echo "   ./setup.sh"
 echo ""
 echo "📖 Documentation:"
-echo "   - README.md - Architecture overview"
-echo "   - SETUP.md - Detailed setup guide"
+echo "   - README.md - Setup and Architecture overview"
 echo "   - CLAUDE_VIBES.md - AI modification examples"
 echo ""
 echo "🎯 Quick Tips:"
-echo "   - Edit desktop.conf to enable/disable packages"
-echo "   - Use the web UI for visual package management"
+echo "   - Edit desktop.conf to enable/disable apps"
+echo "   - Use the web UI for visual app management"
 echo "   - Use AI Assistant for custom modifications"
 echo "   - Check the console for command examples"
 echo ""
@@ -135,4 +134,4 @@ read -r
 echo ""
 echo "🚀 Starting server..."
 echo ""
-$PYTHON server.py
+$PYTHON server.py --port 8887

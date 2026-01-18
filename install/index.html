@@ -1211,14 +1211,17 @@ Examples:
                                window.location.hostname === '';
             
             if (!isLocalhost) {
-                // Not on localhost - show webroot setup instructions
-                offlineDiv.querySelector('h3').textContent = '⚠️ Server Not Running';
+                // Not on localhost - show activation instructions
+                offlineDiv.querySelector('h3').textContent = '⚠️ Activate your Localhost Server';
+                
+                // Get current page path if it exists
+                const currentPath = window.location.pathname;
+                const pathDisplay = currentPath && currentPath !== '/' ? currentPath : '';
+                
                 commandsDiv.innerHTML = `
                     <p style="margin-bottom: 12px;">The desktop installer is a submodule of the <a href="https://dreamstudio.com/webroot" target="_blank" style="color: var(--accent); text-decoration: underline;">webroot repo</a>.</p>
                     <p>Your localhost port link will be:</p>
-                    <code style="margin-top: 8px;">http://localhost:8000</code>
-                    <p style="margin-top: 8px;">or</p>
-                    <code>http://localhost:8887</code>
+                    <code style="margin-top: 8px;">http://localhost:8887${pathDisplay}</code>
                 `;
             } else {
                 // On localhost - show activation commands

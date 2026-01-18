@@ -18,7 +18,7 @@ from pathlib import Path
 import socket
 
 VERSION = "1.0.0"
-DEFAULT_PORT = 8000
+DEFAULT_PORT = 8887
 
 class PackageManager:
     """Handles package detection and management across platforms"""
@@ -864,8 +864,13 @@ class APIHandler(SimpleHTTPRequestHandler):
         """Handle GET requests"""
         parsed_path = urlparse(self.path)
         
+        # Handle root path
         if parsed_path.path == '/':
             self.serve_file('index.html')
+        # Handle /desktop/install/ path (when serving from webroot)
+        elif parsed_path.path == '/desktop/install/' or parsed_path.path == '/desktop/install':
+            self.serve_file('desktop/install/index.html')
+        # API endpoints
         elif parsed_path.path == '/api/status':
             self.handle_status()
         elif parsed_path.path == '/api/packages':
@@ -1054,7 +1059,8 @@ class APIHandler(SimpleHTTPRequestHandler):
     def serve_file(self, filename):
         """Serve a static file"""
         try:
-            file_path = Path(__file__).parent / filename
+            # Use current working directory (which may be webroot if detected)
+            file_path = Path.cwd() / filename
             with open(file_path, 'rb') as f:
                 content = f.read()
             
@@ -1065,6 +1071,8 @@ class APIHandler(SimpleHTTPRequestHandler):
                 self.send_header('Content-type', 'application/javascript')
             elif filename.endswith('.css'):
                 self.send_header('Content-type', 'text/css')
+            elif filename.endswith('.conf'):
+                self.send_header('Content-type', 'text/plain')
             self.end_headers()
             self.wfile.write(content)
         except FileNotFoundError:
@@ -1100,6 +1108,27 @@ def main():
     # Set class variables
     APIHandler.package_manager = pkg_mgr
     APIHandler.llm = llm
+    
+    # Detect if we're in a webroot structure (desktop/install)
+    # If so, change working directory to webroot for serving files
+    base_path = base_dir.resolve()
+    serve_path = None
+    
+    if base_path.name == 'install' and base_path.parent.name == 'desktop':
+        # We're in desktop/install - serve from webroot (2 levels up)
+        webroot = base_path.parent.parent
+        serve_path = webroot
+        print(f"Detected webroot structure. Serving files from: {webroot}")
+        print(f"Access installer at: http://localhost:{{port}}/desktop/install/")
+    elif base_path.name == 'install':
+        # We're in install - serve from parent
+        webroot = base_path.parent
+        serve_path = webroot
+        print(f"Serving files from: {webroot}")
+    
+    # Change to serving directory if detected
+    if serve_path:
+        os.chdir(serve_path)
     
     # Find available port
     port = args.port
