@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Package Manager</title>
+    <title>Desktop Production Suite Installer</title>
     <style>
         * {
             margin: 0;
@@ -235,6 +235,12 @@
             transform: translateY(0);
         }
         
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
         .btn-primary {
             background: var(--accent);
             color: white;
@@ -434,6 +440,153 @@
             font-family: monospace;
         }
         
+        /* AI Provider Select */
+        .ai-provider-select {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-family: inherit;
+            min-width: 120px;
+        }
+        
+        .ai-provider-select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        .ai-provider-select option:disabled {
+            color: var(--text-tertiary);
+        }
+        
+        /* Progress Indicator */
+        .progress-indicator {
+            position: relative;
+            max-width: 250px;
+        }
+        
+        .progress-compact {
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 6px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .progress-compact:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--text-tertiary);
+        }
+        
+        .progress-compact.has-activity {
+            border-color: var(--accent);
+            background: #fef3e7;
+            color: var(--accent);
+        }
+        
+        .progress-expanded {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            min-width: 300px;
+            max-width: 400px;
+            z-index: 100;
+            display: none;
+        }
+        
+        .progress-expanded.show {
+            display: block;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .progress-header h4 {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .progress-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+        
+        .progress-close:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            transform: none;
+        }
+        
+        .progress-steps {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .progress-step {
+            font-size: 12px;
+            padding: 6px 0;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        
+        .progress-step.active {
+            color: var(--accent);
+            font-weight: 500;
+        }
+        
+        .progress-step.complete {
+            color: var(--success);
+        }
+        
+        .progress-step-icon {
+            flex-shrink: 0;
+            width: 16px;
+            text-align: center;
+        }
+        
+        .progress-step-text {
+            flex: 1;
+            line-height: 1.4;
+        }
+        
         /* Modal */
         .modal-overlay {
             display: none;
@@ -518,6 +671,16 @@
             color: #92400e;
         }
         
+        .alert a {
+            color: var(--accent);
+            text-decoration: underline;
+            font-weight: 500;
+        }
+        
+        .alert a:hover {
+            color: var(--accent-hover);
+        }
+        
         .loading-spinner {
             display: inline-block;
             width: 14px;
@@ -600,11 +763,28 @@
             <div class="main-header">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                     <h2 style="margin-bottom: 0;">Manage Desktop</h2>
-                    <div style="font-size: 14px; color: var(--text-secondary); font-weight: 500;">Production Suite</div>
+                    <div class="progress-indicator">
+                        <div class="progress-compact" id="progressCompact" onclick="toggleProgress()">
+                            <span id="progressText">Production Suite</span>
+                        </div>
+                        <div class="progress-expanded" id="progressExpanded">
+                            <div class="progress-header">
+                                <h4>Activity</h4>
+                                <button class="progress-close" onclick="toggleProgress()">×</button>
+                            </div>
+                            <div class="progress-steps" id="progressSteps">
+                                <div class="progress-step">
+                                    <span class="progress-step-icon">✓</span>
+                                    <span class="progress-step-text">Ready</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="action-bar">
                     <button class="btn-primary" onclick="installSelected()">Install Selected</button>
-                    <button class="btn-success" onclick="showUpdateModal()">Update Apps</button>
+                    <button class="btn-success" id="updateBtn" onclick="showUpdateModal()" disabled>Update Selected</button>
+                    <button class="btn-secondary" onclick="showUninstallModal()">Uninstall</button>
                     <button class="btn-secondary" onclick="refreshPackages()">Refresh</button>
                 </div>
             </div>
@@ -648,7 +828,14 @@ Examples:
 • Create a backup feature before updates
 • Add dark mode to the UI
 • Generate a progress indicator for installations"></textarea>
-                    <button class="btn-primary" onclick="sendToLLM()" style="margin-top: 12px; width: 100%;">Send to AI</button>
+                    <div style="display: flex; gap: 8px; margin-top: 12px;">
+                        <select id="aiProvider" class="ai-provider-select">
+                            <option value="claude">Claude</option>
+                            <option value="gemini">Gemini</option>
+                            <option value="openai">OpenAI</option>
+                        </select>
+                        <button class="btn-primary" onclick="sendToLLM()">Send to AI</button>
+                    </div>
                     <div id="llmResponse" style="display: none;"></div>
                     
                     <div class="vibe-examples">
@@ -667,6 +854,13 @@ Examples:
                         </div>
                     </div>
                 </div>
+                
+                <div class="card" style="background: var(--bg-secondary); border: none; padding: 16px;">
+                    <div style="font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 14px;">💤</span>
+                        <span>Commented out in the desktop.conf file</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -674,12 +868,26 @@ Examples:
     <!-- Update Modal -->
     <div class="modal-overlay" id="updateModal">
         <div class="modal-content">
-            <h3>Update Apps</h3>
-            <p>Updates are available for some apps. How would you like to proceed?</p>
+            <h3>Update Selected Apps</h3>
+            <p>Updates are available for some selected apps. How would you like to proceed?</p>
             <div class="modal-actions">
-                <button class="btn-success" onclick="updateAll()">Update All Apps</button>
-                <button class="btn-primary" onclick="selectUpdates()">Select Updates Manually</button>
-                <button class="btn-secondary" onclick="closeUpdateModal()">No Updates</button>
+                <button class="btn-success" onclick="updateAll()">Update All Selected</button>
+                <button class="btn-primary" onclick="selectUpdates()">Select Apps with Updates</button>
+                <button class="btn-secondary" onclick="closeUpdateModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Uninstall Modal -->
+    <div class="modal-overlay" id="uninstallModal">
+        <div class="modal-content">
+            <h3>Uninstall Apps</h3>
+            <p>The following apps will be uninstalled:</p>
+            <div id="uninstallList" style="background: var(--bg-secondary); padding: 12px; border-radius: 6px; margin: 12px 0; max-height: 200px; overflow-y: auto;">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 24px;">
+                <button class="btn-primary" onclick="confirmUninstall()" style="background: var(--error); flex: 1;">Confirm Uninstall</button>
+                <button class="btn-secondary" onclick="closeUninstallModal()" style="flex: 1;">Cancel</button>
             </div>
         </div>
     </div>
@@ -687,6 +895,116 @@ Examples:
     <script>
         let packagesData = [];
         let serverOnline = false;
+        let progressSteps = [];
+        let progressExpanded = false;
+        
+        // Progress tracking
+        function addProgress(text, status = 'active') {
+            const step = { text, status, timestamp: new Date() };
+            progressSteps.push(step);
+            updateProgressDisplay();
+        }
+        
+        function completeProgress(text) {
+            const step = progressSteps.find(s => s.text === text && s.status === 'active');
+            if (step) {
+                step.status = 'complete';
+                updateProgressDisplay();
+            }
+        }
+        
+        function updateProgressDisplay() {
+            const compactEl = document.getElementById('progressCompact');
+            const stepsEl = document.getElementById('progressSteps');
+            const textEl = document.getElementById('progressText');
+            
+            // Get latest active step
+            const activeSteps = progressSteps.filter(s => s.status === 'active');
+            const latestActive = activeSteps[activeSteps.length - 1];
+            
+            if (latestActive) {
+                // Show current active step
+                textEl.textContent = latestActive.text;
+                compactEl.classList.add('has-activity');
+            } else if (progressSteps.length > 0) {
+                // All steps complete - check if all are complete
+                const allComplete = progressSteps.every(s => s.status === 'complete');
+                if (allComplete) {
+                    // Return to "Production Suite"
+                    textEl.textContent = 'Production Suite';
+                    compactEl.classList.remove('has-activity');
+                } else {
+                    // Show most recent step
+                    const lastStep = progressSteps[progressSteps.length - 1];
+                    textEl.textContent = lastStep.text;
+                    compactEl.classList.remove('has-activity');
+                }
+            } else {
+                textEl.textContent = 'Production Suite';
+                compactEl.classList.remove('has-activity');
+            }
+            
+            // Update expanded view - show all steps, don't clear
+            if (progressSteps.length === 0) {
+                stepsEl.innerHTML = '<div class="progress-step"><span class="progress-step-icon">✓</span><span class="progress-step-text">Ready</span></div>';
+            } else {
+                stepsEl.innerHTML = progressSteps.slice(-10).reverse().map(step => {
+                    const icon = step.status === 'complete' ? '✓' : step.status === 'active' ? '⟳' : '○';
+                    const className = `progress-step ${step.status}`;
+                    return `<div class="${className}"><span class="progress-step-icon">${icon}</span><span class="progress-step-text">${step.text}</span></div>`;
+                }).join('');
+            }
+        }
+        
+        function toggleProgress() {
+            progressExpanded = !progressExpanded;
+            const expandedEl = document.getElementById('progressExpanded');
+            if (progressExpanded) {
+                expandedEl.classList.add('show');
+            } else {
+                expandedEl.classList.remove('show');
+            }
+        }
+        
+        // Detect available AI providers from server
+        async function detectAIProviders() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                
+                const select = document.getElementById('aiProvider');
+                const options = select.querySelectorAll('option');
+                
+                // Disable all options first
+                options.forEach(opt => opt.disabled = true);
+                
+                // Enable Claude if available
+                if (data.llm_available) {
+                    const claudeOption = select.querySelector('option[value="claude"]');
+                    if (claudeOption) {
+                        claudeOption.disabled = false;
+                        select.value = 'claude';  // Select it
+                    }
+                }
+                
+                // TODO: Add detection for Gemini and OpenAI when server supports them
+                // For now they remain disabled
+                
+                // If no options are enabled, disable the select itself
+                const hasEnabledOption = Array.from(options).some(opt => !opt.disabled);
+                if (!hasEnabledOption) {
+                    select.disabled = true;
+                    select.innerHTML = '<option>No AI available</option>';
+                }
+                
+            } catch (error) {
+                logTime('⚠️ Could not detect AI providers');
+                // Disable dropdown if server is offline
+                const select = document.getElementById('aiProvider');
+                select.disabled = true;
+                select.innerHTML = '<option>Server offline</option>';
+            }
+        }
         
         // Logging with timestamps
         function logTime(message, data = null) {
@@ -697,19 +1015,30 @@ Examples:
         
         logTime('🚀 Page loaded, starting initialization');
         
-        // Initialize - show apps from desktop.conf immediately
+        // Initialize - show apps from packages.conf immediately
         async function init() {
             logTime('📋 Starting init()');
+            addProgress('Loading apps...');
             
             // First, parse desktop.conf directly to show list instantly
             await loadPackagesFromConfig();
+            completeProgress('Loading apps...');
             
             // Then check server status
+            addProgress('Checking server...');
             await checkServerStatus();
+            completeProgress('Checking server...');
+            
+            // Detect available AI providers
+            if (serverOnline) {
+                await detectAIProviders();
+            }
             
             // Finally, if server is online, fetch detailed status
             if (serverOnline) {
+                addProgress('Fetching app details...');
                 await fetchPackageStatus();
+                completeProgress('Fetching app details...');
             }
             
             logTime('✅ Initialization complete');
@@ -864,6 +1193,10 @@ Examples:
                 document.getElementById('serverVersion').textContent = 'Offline';
                 document.getElementById('osInfo').textContent = 'Server not running';
                 showServerOffline();
+                
+                // Hide all loading spinners immediately when server is offline
+                packagesData = packagesData.map(pkg => ({ ...pkg, statusLoading: false }));
+                displayPackages();
             }
         }
         
@@ -872,18 +1205,40 @@ Examples:
             const offlineDiv = document.getElementById('serverOffline');
             const commandsDiv = document.getElementById('startCommands');
             
-            const userAgent = navigator.userAgent.toLowerCase();
-            let commands = '';
+            // Check if we're on localhost
+            const isLocalhost = window.location.hostname === 'localhost' || 
+                               window.location.hostname === '127.0.0.1' ||
+                               window.location.hostname === '';
             
-            if (userAgent.includes('mac') || userAgent.includes('darwin')) {
-                commands = '<code>cd install<br>chmod +x server.py<br>python3 server.py</code>';
-            } else if (userAgent.includes('win')) {
-                commands = '<code>cd install<br>python server.py</code>';
+            if (!isLocalhost) {
+                // Not on localhost - show webroot setup instructions
+                offlineDiv.querySelector('h3').textContent = '⚠️ Server Not Running';
+                commandsDiv.innerHTML = `
+                    <p style="margin-bottom: 12px;">The desktop installer is a submodule of the <a href="https://dreamstudio.com/webroot" target="_blank" style="color: var(--accent); text-decoration: underline;">webroot repo</a>.</p>
+                    <p>Your localhost port link will be:</p>
+                    <code style="margin-top: 8px;">http://localhost:8000</code>
+                    <p style="margin-top: 8px;">or</p>
+                    <code>http://localhost:8887</code>
+                `;
             } else {
-                commands = '<code>cd install<br>chmod +x server.py<br>python3 server.py</code>';
+                // On localhost - show activation commands
+                offlineDiv.querySelector('h3').textContent = '⚠️ Activate your server';
+                
+                const userAgent = navigator.userAgent.toLowerCase();
+                let commands = '';
+                
+                if (userAgent.includes('mac') || userAgent.includes('darwin')) {
+                    commands = '<code>cd desktop/install<br>chmod +x quickstart.sh<br>./quickstart.sh</code>';
+                } else if (userAgent.includes('win')) {
+                    commands = '<code>cd desktop\\install<br>quickstart.sh</code>';
+                } else {
+                    // Linux
+                    commands = '<code>cd desktop/install<br>chmod +x quickstart.sh<br>./quickstart.sh</code>';
+                }
+                
+                commandsDiv.innerHTML = commands;
             }
             
-            commandsDiv.innerHTML = commands;
             offlineDiv.style.display = 'block';
         }
         
@@ -899,6 +1254,21 @@ Examples:
             
             listDiv.innerHTML = packagesData.map(pkg => createPackageHTML(pkg)).join('');
             logTime(`✅ Displayed ${packagesData.length} apps in sidebar`);
+            
+            // Update button states after rendering
+            updateButtonStates();
+        }
+        
+        // Format package name for display
+        function formatPackageName(name) {
+            // If it's a GitHub package, extract just the repo name
+            if (name.startsWith('github:')) {
+                const parts = name.split('/');
+                name = parts[parts.length - 1]; // Get last part (repo name)
+            }
+            
+            // Capitalize first letter
+            return name.charAt(0).toUpperCase() + name.slice(1);
         }
         
         // Create app HTML
@@ -907,6 +1277,9 @@ Examples:
             const isInstalled = pkg.installed;
             const hasUpdate = pkg.update_available;
             const loading = pkg.statusLoading;
+            
+            // Format the display name
+            const displayName = formatPackageName(pkg.name);
             
             // Status icons
             let statusIcons = '';
@@ -932,9 +1305,10 @@ Examples:
                     <input type="checkbox" class="package-checkbox" 
                            id="pkg-${pkg.name}" 
                            ${isCommented ? 'disabled' : ''}
+                           onchange="updateButtonStates()"
                            onclick="event.stopPropagation()">
                     <div class="package-info">
-                        <div class="package-name">${pkg.name}</div>
+                        <div class="package-name">${displayName}</div>
                         ${pkg.description ? `<div class="package-description">${pkg.description}</div>` : ''}
                         ${!loading && pkg.version && pkg.version !== 'unknown' ? `<div class="package-description">v${pkg.version}</div>` : ''}
                     </div>
@@ -950,6 +1324,43 @@ Examples:
             const checkbox = document.getElementById(`pkg-${name}`);
             if (checkbox && !checkbox.disabled) {
                 checkbox.checked = !checkbox.checked;
+                updateButtonStates();
+            }
+        }
+        
+        // Update button states based on selection
+        function updateButtonStates() {
+            const selected = getSelectedPackages();
+            
+            // Get selected apps that are installed
+            const selectedInstalled = packagesData.filter(pkg => {
+                const checkbox = document.getElementById(`pkg-${pkg.name}`);
+                return checkbox && checkbox.checked && pkg.installed;
+            });
+            
+            // Get selected apps that are NOT installed
+            const selectedNotInstalled = packagesData.filter(pkg => {
+                const checkbox = document.getElementById(`pkg-${pkg.name}`);
+                return checkbox && checkbox.checked && !pkg.installed;
+            });
+            
+            const updateBtn = document.getElementById('updateBtn');
+            const installBtn = document.querySelector('.btn-primary[onclick="installSelected()"]');
+            
+            // Enable Install Selected only if there are apps selected that are NOT installed
+            if (installBtn) {
+                if (selectedNotInstalled.length > 0) {
+                    installBtn.disabled = false;
+                } else {
+                    installBtn.disabled = true;
+                }
+            }
+            
+            // Enable Update Selected button if ANY selected apps are installed
+            if (selectedInstalled.length > 0) {
+                updateBtn.disabled = false;
+            } else {
+                updateBtn.disabled = true;
             }
         }
         
@@ -973,6 +1384,7 @@ Examples:
             }
             
             logTime(`🔧 Installing ${selected.length} app(s)`, selected);
+            addProgress(`Installing ${selected.length} app(s)...`);
             appendToConsole(`Installing ${selected.length} app(s)...`);
             
             try {
@@ -985,15 +1397,29 @@ Examples:
                 const data = await response.json();
                 
                 if (data.success) {
+                    completeProgress(`Installing ${selected.length} app(s)...`);
                     appendToConsole('Installation completed!');
+                    
                     for (const [pkg, success] of Object.entries(data.results)) {
-                        appendToConsole(`  ${pkg}: ${success ? '✓ Success' : '✗ Failed'}`);
+                        const displayName = formatPackageName(pkg);
+                        if (success) {
+                            appendToConsole(`  ${displayName}: ✓ Success`);
+                        } else {
+                            appendToConsole(`  ${displayName}: ✗ Failed`);
+                            // Show error details if available
+                            if (data.errors && data.errors[pkg]) {
+                                appendToConsole(`    Error: ${data.errors[pkg]}`);
+                            }
+                        }
                     }
+                    
                     await refreshPackages();
                 } else {
+                    completeProgress(`Installing ${selected.length} app(s)...`);
                     appendToConsole('Installation failed: ' + data.error);
                 }
             } catch (error) {
+                completeProgress(`Installing ${selected.length} app(s)...`);
                 appendToConsole('Error: ' + error.message);
             }
         }
@@ -1019,6 +1445,7 @@ Examples:
         async function updateAll() {
             closeUpdateModal();
             logTime('🔄 Updating all apps');
+            addProgress('Updating all apps...');
             appendToConsole('Updating all apps...');
             
             try {
@@ -1031,15 +1458,18 @@ Examples:
                 const data = await response.json();
                 
                 if (data.success) {
+                    completeProgress('Updating all apps...');
                     appendToConsole('Updates completed!');
                     for (const [pkg, success] of Object.entries(data.results)) {
                         appendToConsole(`  ${pkg}: ${success ? '✓ Updated' : '✗ Failed'}`);
                     }
                     await refreshPackages();
                 } else {
+                    completeProgress('Updating all apps...');
                     appendToConsole('Update failed: ' + data.error);
                 }
             } catch (error) {
+                completeProgress('Updating all apps...');
                 appendToConsole('Error: ' + error.message);
             }
         }
@@ -1058,9 +1488,84 @@ Examples:
             appendToConsole('Apps with updates selected. Click "Install Selected" to update.');
         }
         
+        // Show uninstall modal
+        function showUninstallModal() {
+            const selected = getSelectedPackages();
+            const selectedInstalled = packagesData.filter(pkg => {
+                const checkbox = document.getElementById(`pkg-${pkg.name}`);
+                return checkbox && checkbox.checked && pkg.installed;
+            });
+            
+            if (selectedInstalled.length === 0) {
+                appendToConsole('No installed apps selected');
+                return;
+            }
+            
+            // Populate the uninstall list
+            const listDiv = document.getElementById('uninstallList');
+            listDiv.innerHTML = selectedInstalled.map(pkg => {
+                const displayName = formatPackageName(pkg.name);
+                return `
+                    <div style="padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px;">
+                        <strong>${displayName}</strong>
+                        ${pkg.description ? `<span style="color: var(--text-secondary); margin-left: 8px;">- ${pkg.description}</span>` : ''}
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('uninstallModal').classList.add('show');
+        }
+        
+        // Close uninstall modal
+        function closeUninstallModal() {
+            document.getElementById('uninstallModal').classList.remove('show');
+        }
+        
+        // Confirm uninstall
+        async function confirmUninstall() {
+            closeUninstallModal();
+            
+            const selectedInstalled = packagesData.filter(pkg => {
+                const checkbox = document.getElementById(`pkg-${pkg.name}`);
+                return checkbox && checkbox.checked && pkg.installed;
+            });
+            
+            const packageNames = selectedInstalled.map(pkg => pkg.name);
+            
+            logTime(`🗑️ Uninstalling ${packageNames.length} app(s)`, packageNames);
+            addProgress(`Uninstalling ${packageNames.length} app(s)...`);
+            appendToConsole(`Uninstalling ${packageNames.length} app(s)...`);
+            
+            try {
+                const response = await fetch('/api/uninstall', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ packages: packageNames })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    completeProgress(`Uninstalling ${packageNames.length} app(s)...`);
+                    appendToConsole('Uninstall completed!');
+                    for (const [pkg, success] of Object.entries(data.results)) {
+                        appendToConsole(`  ${pkg}: ${success ? '✓ Uninstalled' : '✗ Failed'}`);
+                    }
+                    await refreshPackages();
+                } else {
+                    completeProgress(`Uninstalling ${packageNames.length} app(s)...`);
+                    appendToConsole('Uninstall failed: ' + data.error);
+                }
+            } catch (error) {
+                completeProgress(`Uninstalling ${packageNames.length} app(s)...`);
+                appendToConsole('Error: ' + error.message);
+            }
+        }
+        
         // Refresh apps
         async function refreshPackages() {
             logTime('🔄 Refreshing app list');
+            addProgress('Refreshing apps...');
             appendToConsole('Refreshing app list...');
             
             // Show loading spinners
@@ -1081,18 +1586,22 @@ Examples:
                         statusLoading: false
                     }));
                     displayPackages();
+                    updateButtonStates();
                     
                     if (data.cached) {
                         logTime(`✅ Used cached data (${data.cache_age}s old, ${duration}ms)`);
                         appendToConsole(`App list refreshed (used cache, ${data.cache_age}s old)`);
+                        completeProgress('Refreshing apps...');
                     } else {
                         logTime(`✅ Refreshed from system (${duration}ms)`);
                         appendToConsole('App list refreshed from system');
+                        completeProgress('Refreshing apps...');
                     }
                 }
             } catch (error) {
                 logTime('❌ Refresh failed', error);
                 appendToConsole('Error refreshing: ' + error.message);
+                completeProgress('Refreshing apps...');
             }
         }
         
@@ -1104,6 +1613,7 @@ Examples:
                     if (checkbox) checkbox.checked = true;
                 }
             });
+            updateButtonStates();
         }
         
         // Deselect all
@@ -1112,6 +1622,7 @@ Examples:
                 const checkbox = document.getElementById(`pkg-${pkg.name}`);
                 if (checkbox) checkbox.checked = false;
             });
+            updateButtonStates();
         }
         
         // Execute command

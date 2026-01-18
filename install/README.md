@@ -1,6 +1,8 @@
-# Cross-Platform Package Manager
+# Desktop Production Suite Installer
 
 A web-based interface for managing software installations across Mac, Windows, and Linux.
+
+**[View Installer Online](https://dreamstudio.com/desktop/install)**
 
 ## Quick Start
 
@@ -8,20 +10,20 @@ The fastest way to get started:
 
 **Mac/Linux:**
 ```bash
-cd install
+cd desktop/install
 chmod +x quickstart.sh setup.sh server.py  # Make scripts executable
 ./quickstart.sh
 ```
 
 **Windows (Command Prompt or PowerShell):**
 ```cmd
-cd install
+cd desktop\install
 python quickstart.sh
 ```
 
 **Any Platform (without changing permissions):**
 ```bash
-cd install
+cd desktop/install
 bash quickstart.sh  # or: python quickstart.sh
 ```
 
@@ -61,11 +63,11 @@ python server.py   # Windows
 
 ### 1. Download Files
 
-Extract the `install` folder to your preferred location.
+Extract the `desktop/install` folder to your preferred location.
 
 ### 2. Configure Packages
 
-Edit `desktop.conf` to select which apps you want available:
+Edit `desktop.conf` to select which packages you want available:
 
 ```conf
 ## Comments start with double ##
@@ -86,7 +88,7 @@ If you want AI-powered modifications:
 2. Create `.env` file at `../../docker/.env`:
 
 ```bash
-# From the install directory
+# From the desktop/install directory
 mkdir -p ../../docker
 cp .env.example ../../docker/.env
 ```
@@ -113,14 +115,14 @@ pip install anthropic --break-system-packages
 
 **Mac/Linux:**
 ```bash
-cd install
+cd desktop/install
 chmod +x server.py setup.sh quickstart.sh  # Make executable (one-time only)
 python3 server.py
 ```
 
 **Windows:**
 ```cmd
-cd install
+cd desktop\install
 python server.py
 ```
 
@@ -162,7 +164,7 @@ Navigate to `http://localhost:8000` in your web browser.
 
 ### Package Status Icons
 
-- 💤 **Commented Out** - Package is disabled in desktop.conf
+- 💤 **Commented Out** - Package is disabled in packages.conf
 - 📥 **Not Installed** - Package is available but not installed
 - ✓ **Installed** - Package is currently installed
 - 🔄 **Update Available** - A newer version is available
@@ -205,21 +207,21 @@ See `CLAUDE_VIBES.md` for 50+ detailed examples.
 # The script will:
 # - Detect your OS and package manager
 # - Install package manager if needed (macOS only)
-# - Read desktop.conf
+# - Read packages.conf
 # - Install all uncommented packages
 ```
 
 ## Project Structure
 
 ```
-install/
+desktop/install/
 ├── README.md                 # This file - complete documentation
 ├── CLAUDE_VIBES.md          # AI modification examples for Claude Code CLI
 ├── LICENSE                  # MIT License
 ├── .gitignore              # Git ignore rules
 ├── .env.example            # Example environment configuration
 │
-├── desktop.conf           # Package configuration (comment/uncomment packages)
+├── desktop.conf            # Package configuration (comment/uncomment packages)
 ├── setup.sh               # Cross-platform installation script (executable)
 ├── server.py              # Python backend server (executable)
 ├── index.html             # Complete web frontend (no external dependencies)
@@ -233,7 +235,7 @@ install/
 
 **setup.sh** - Bash script for command-line installation
 - Detects OS and package manager automatically
-- Reads desktop.conf and installs enabled packages
+- Reads packages.conf and installs enabled packages
 - Handles sudo/admin permissions
 - Cross-platform: macOS, Windows (Git Bash/WSL), Linux
 
@@ -252,7 +254,7 @@ install/
 - Modern design inspired by Claude.ai
 - All CSS and JavaScript included inline (no external files)
 
-**desktop.conf** - Package configuration
+**packages.conf** - Package configuration
 - Use `##` for true comments
 - Use `#` prefix to disable a package
 - Add inline descriptions after package name
@@ -470,7 +472,7 @@ sudo dnf install flatpak      # Fedora
 
 ### Adding Custom Packages
 
-Edit `desktop.conf` and add package names:
+Edit `packages.conf` and add package names:
 
 ```conf
 ## Custom additions
@@ -577,7 +579,7 @@ From the initial download, you should use these files **as-is**:
 
 📝 **Use the updated versions:**
 - `README.md` - **This file** (consolidated documentation)
-- `desktop.conf` - Updated to use `##` for comments
+- `packages.conf` - Updated to use `##` for comments
 - `server.py` - Updated to parse new comment format
 - `index.html` - Redesigned UI inspired by Claude.ai
 - `setup.sh` - Same as original

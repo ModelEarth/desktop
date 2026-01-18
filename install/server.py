@@ -295,21 +295,162 @@ class PackageManager:
             if 'packages' in self.cache:
                 return self.cache['packages']
         
+        print(f"[PackageManager] Starting package status check at {current_time}")
+        start_time = time.time()
+        
         enabled_packages, all_packages = self.read_packages()
         packages_status = []
         
+        # Get all installed packages in one batch operation
+        installed_packages = self.get_all_installed_packages()
+        print(f"[PackageManager] Got installed packages list in {time.time() - start_time:.2f}s")
+        
         for pkg_info in all_packages:
-            status = self.get_package_status(pkg_info['name'], pkg_info.get('description', ''))
-            status['enabled'] = pkg_info['enabled']
+            pkg_name = pkg_info['name']
+            
+            # Handle GitHub packages separately
+            if pkg_name.startswith('github:'):
+                repo = pkg_name[7:]  # Remove 'github:' prefix
+                parts = repo.split('/')
+                if len(parts) == 2:
+                    repo_name = parts[1]
+                    
+                    # Check webroot location first (if in desktop/install structure)
+                    base_path = Path(self.base_dir).resolve()
+                    is_installed = False
+                    
+                    if base_path.name == 'install' and base_path.parent.name == 'desktop':
+                        # Check webroot
+                        webroot = base_path.parent.parent
+                        install_dir = webroot / repo_name
+                        is_installed = install_dir.exists()
+                    elif base_path.name == 'install':
+                        # Check parent as webroot
+                        webroot = base_path.parent
+                        install_dir = webroot / repo_name
+                        is_installed = install_dir.exists()
+                    
+                    # Fallback to ~/Applications/GitHub
+                    if not is_installed:
+                        apps_dir = Path.home() / "Applications" / "GitHub"
+                        install_dir = apps_dir / repo_name
+                        is_installed = install_dir.exists()
+                    
+                    status = {
+                        'name': pkg_name,
+                        'description': pkg_info.get('description', ''),
+                        'installed': is_installed,
+                        'version': 'git' if is_installed else None,
+                        'update_available': False,
+                        'new_version': None,
+                        'enabled': pkg_info['enabled']
+                    }
+                    packages_status.append(status)
+                    continue
+            
+            # Regular package manager packages
+            is_installed = pkg_name in installed_packages
+            
+            status = {
+                'name': pkg_name,
+                'description': pkg_info.get('description', ''),
+                'installed': is_installed,
+                'version': installed_packages.get(pkg_name, {}).get('version', None) if is_installed else None,
+                'update_available': False,  # Skip update checks for speed
+                'new_version': None,
+                'enabled': pkg_info['enabled']
+            }
             packages_status.append(status)
         
         self.cache['packages'] = packages_status
         self.cache_time = current_time
         
+        print(f"[PackageManager] Completed status check in {time.time() - start_time:.2f}s")
         return packages_status
     
+    def get_all_installed_packages(self):
+        """Get all installed packages in one batch operation - MUCH faster"""
+        installed = {}
+        
+        try:
+            if self.pkg_manager == "brew":
+                # Get all casks at once
+                result = subprocess.run(
+                    ["brew", "list", "--cask", "--versions"],
+                    capture_output=True, text=True, timeout=10
+                )
+                for line in result.stdout.split('\n'):
+                    if line.strip():
+                        parts = line.split()
+                        if len(parts) >= 2:
+                            installed[parts[0]] = {'version': parts[1]}
+                
+                # Get all formulae at once
+                result = subprocess.run(
+                    ["brew", "list", "--formula", "--versions"],
+                    capture_output=True, text=True, timeout=10
+                )
+                for line in result.stdout.split('\n'):
+                    if line.strip():
+                        parts = line.split()
+                        if len(parts) >= 2:
+                            installed[parts[0]] = {'version': parts[1]}
+                            
+            elif self.pkg_manager == "apt":
+                result = subprocess.run(
+                    ["dpkg-query", "-W", "-f=${Package}\t${Version}\n"],
+                    capture_output=True, text=True, timeout=10
+                )
+                for line in result.stdout.split('\n'):
+                    if '\t' in line:
+                        pkg, ver = line.split('\t', 1)
+                        installed[pkg] = {'version': ver}
+                        
+            elif self.pkg_manager in ["dnf", "yum"]:
+                result = subprocess.run(
+                    ["rpm", "-qa", "--queryformat", "%{NAME}\t%{VERSION}\n"],
+                    capture_output=True, text=True, timeout=10
+                )
+                for line in result.stdout.split('\n'):
+                    if '\t' in line:
+                        pkg, ver = line.split('\t', 1)
+                        installed[pkg] = {'version': ver}
+                        
+            elif self.pkg_manager == "flatpak":
+                result = subprocess.run(
+                    ["flatpak", "list", "--app", "--columns=name,version"],
+                    capture_output=True, text=True, timeout=10
+                )
+                for line in result.stdout.split('\n')[1:]:  # Skip header
+                    if '\t' in line:
+                        pkg, ver = line.split('\t', 1)
+                        installed[pkg.strip()] = {'version': ver.strip()}
+                        
+            elif self.pkg_manager == "winget":
+                result = subprocess.run(
+                    ["winget", "list"],
+                    capture_output=True, text=True, timeout=15
+                )
+                # Parse winget output (it's a formatted table)
+                lines = result.stdout.split('\n')
+                for line in lines[2:]:  # Skip header lines
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        installed[parts[0]] = {'version': parts[1]}
+                        
+        except subprocess.TimeoutExpired:
+            print(f"[PackageManager] Timeout getting installed packages for {self.pkg_manager}")
+        except Exception as e:
+            print(f"[PackageManager] Error getting installed packages: {e}")
+        
+        return installed
+    
     def install_package(self, package):
-        """Install a package"""
+        """Install a package - returns (success, error_message)"""
+        # Check if it's a GitHub repository
+        if package.startswith('github:'):
+            return self.install_from_github(package[7:])  # Remove 'github:' prefix
+        
         try:
             if self.pkg_manager == "brew":
                 # Try cask first, fall back to formula
@@ -322,34 +463,208 @@ class PackageManager:
                         ["brew", "install", package],
                         capture_output=True, text=True, check=True
                     )
-                return True
+                return (True, None)
                 
             elif self.pkg_manager == "apt":
                 result = subprocess.run(
                     ["sudo", "apt-get", "install", "-y", package],
                     capture_output=True, text=True, check=True
                 )
-                return True
+                return (True, None)
                 
             elif self.pkg_manager == "dnf":
                 result = subprocess.run(
                     ["sudo", "dnf", "install", "-y", package],
                     capture_output=True, text=True, check=True
                 )
-                return True
+                return (True, None)
                 
             elif self.pkg_manager == "winget":
                 result = subprocess.run(
                     ["winget", "install", "-e", "--id", package],
                     capture_output=True, text=True, check=True
                 )
-                return True
+                return (True, None)
                 
         except subprocess.CalledProcessError as e:
-            print(f"Error installing {package}: {e}")
-            return False
+            error_msg = f"Error installing {package}: {e.stderr if e.stderr else str(e)}"
+            print(error_msg)
+            return (False, error_msg)
         
-        return False
+        return (False, f"Package manager '{self.pkg_manager}' not supported for {package}")
+    
+    def install_from_github(self, repo):
+        """Install from GitHub repository (e.g., 'mcmonkeyprojects/SwarmUI') - returns (success, error_message)"""
+        try:
+            import shutil
+            
+            # Parse owner/repo
+            parts = repo.split('/')
+            if len(parts) != 2:
+                error = f"Invalid GitHub repo format: {repo}. Use 'owner/repo'"
+                print(error)
+                return (False, error)
+            
+            owner, repo_name = parts
+            
+            # Check if git is installed
+            if not self.command_exists("git"):
+                error = "Git is not installed. Please install git first."
+                print(error)
+                return (False, error)
+            
+            # Determine installation directory based on base_dir
+            # Check if we're running in a webroot structure (desktop/install)
+            base_path = Path(self.base_dir).resolve()
+            
+            # Check if base_dir ends with 'desktop/install' or 'install'
+            if base_path.name == 'install' and base_path.parent.name == 'desktop':
+                # We're in desktop/install, install to webroot
+                webroot = base_path.parent.parent
+                install_dir = webroot / repo_name
+                print(f"Detected webroot structure. Installing to {install_dir}")
+            elif base_path.name == 'install':
+                # We're in install but not under desktop - use parent as webroot
+                webroot = base_path.parent
+                install_dir = webroot / repo_name
+                print(f"Installing to webroot: {install_dir}")
+            else:
+                # Not in webroot structure - use ~/Applications/GitHub
+                apps_dir = Path.home() / "Applications" / "GitHub"
+                apps_dir.mkdir(parents=True, exist_ok=True)
+                install_dir = apps_dir / repo_name
+                
+                # Warn user about webroot recommendation
+                warning = f"⚠️  Not running in webroot. Repo will be installed to {install_dir}. For web access, run the installer from a webroot (e.g., http://localhost:8000/desktop/install) so repos can be accessed at http://localhost:8000/{repo_name}"
+                print(warning)
+            
+            # Clone if not exists, pull if exists
+            if install_dir.exists():
+                print(f"Updating {repo_name}...")
+                result = subprocess.run(
+                    ["git", "pull"],
+                    cwd=install_dir,
+                    capture_output=True, text=True
+                )
+                if result.returncode != 0:
+                    error = f"Git pull failed: {result.stderr}"
+                    print(error)
+                    return (False, error)
+            else:
+                print(f"Cloning {repo}...")
+                result = subprocess.run(
+                    ["git", "clone", f"https://github.com/{repo}.git", str(install_dir)],
+                    capture_output=True, text=True
+                )
+                if result.returncode != 0:
+                    error = f"Git clone failed: {result.stderr}"
+                    print(error)
+                    return (False, error)
+            
+            # Special handling for SwarmUI
+            if repo_name == "SwarmUI":
+                print("Setting up SwarmUI...")
+                
+                # On macOS, run the install script
+                if self.os_type == "macos":
+                    install_script = install_dir / "launchtools" / "install-mac.sh"
+                    if not install_script.exists():
+                        error = f"Install script not found: {install_script}"
+                        print(error)
+                        return (False, error)
+                    
+                    # Make it executable
+                    subprocess.run(["chmod", "+x", str(install_script)])
+                    
+                    # Run the install script
+                    result = subprocess.run(
+                        [str(install_script)],
+                        cwd=install_dir,
+                        capture_output=True, text=True
+                    )
+                    print(f"SwarmUI install output: {result.stdout}")
+                    
+                    if result.returncode != 0:
+                        error = f"SwarmUI install script failed: {result.stderr}\nStdout: {result.stdout}"
+                        print(error)
+                        return (False, error)
+                    
+                    # Create a launch script in a standard location
+                    launch_script_path = Path.home() / "Applications" / "launch-swarmui.sh"
+                    launch_script = f"""#!/bin/bash
+cd "{install_dir}"
+./launchtools/launch-mac.sh
+"""
+                    launch_script_path.write_text(launch_script)
+                    subprocess.run(["chmod", "+x", str(launch_script_path)])
+                    
+                    print(f"Created launch script at {launch_script_path}")
+                    
+                    # If in webroot, provide web access info
+                    if 'webroot' in locals():
+                        success_msg = f"SwarmUI installed successfully! Access at http://localhost:PORT/{repo_name}"
+                        print(success_msg)
+                    
+                    return (True, None)
+                
+                # On Linux
+                elif self.os_type == "linux":
+                    install_script = install_dir / "launchtools" / "install-linux.sh"
+                    if not install_script.exists():
+                        error = f"Install script not found: {install_script}"
+                        print(error)
+                        return (False, error)
+                    
+                    subprocess.run(["chmod", "+x", str(install_script)])
+                    result = subprocess.run(
+                        [str(install_script)],
+                        cwd=install_dir,
+                        capture_output=True, text=True
+                    )
+                    print(f"SwarmUI install output: {result.stdout}")
+                    
+                    if result.returncode != 0:
+                        error = f"SwarmUI install script failed: {result.stderr}"
+                        print(error)
+                        return (False, error)
+                    
+                    return (True, None)
+                
+                # On Windows
+                elif self.os_type == "windows":
+                    install_script = install_dir / "launchtools" / "install-windows.bat"
+                    if not install_script.exists():
+                        error = f"Install script not found: {install_script}"
+                        print(error)
+                        return (False, error)
+                    
+                    result = subprocess.run(
+                        [str(install_script)],
+                        cwd=install_dir,
+                        capture_output=True, text=True,
+                        shell=True
+                    )
+                    print(f"SwarmUI install output: {result.stdout}")
+                    
+                    if result.returncode != 0:
+                        error = f"SwarmUI install script failed: {result.stderr}"
+                        print(error)
+                        return (False, error)
+                    
+                    return (True, None)
+            
+            # Generic GitHub repo install - just clone
+            print(f"Successfully installed {repo_name} to {install_dir}")
+            return (True, None)
+            
+        except subprocess.CalledProcessError as e:
+            error = f"Error installing from GitHub {repo}: {e.stderr if e.stderr else str(e)}"
+            print(error)
+            return (False, error)
+        except Exception as e:
+            error = f"Unexpected error installing {repo}: {str(e)}"
+            print(error)
+            return (False, error)
     
     def update_package(self, package):
         """Update a package"""
@@ -374,6 +689,102 @@ class PackageManager:
                 
         except subprocess.CalledProcessError as e:
             print(f"Error updating {package}: {e}")
+            return False
+        
+        return False
+    
+    def uninstall_package(self, package):
+        """Uninstall a package"""
+        # Check if it's a GitHub repository
+        if package.startswith('github:'):
+            repo = package[7:]  # Remove 'github:' prefix
+            parts = repo.split('/')
+            if len(parts) == 2:
+                repo_name = parts[1]
+                
+                # Check webroot location first
+                base_path = Path(self.base_dir).resolve()
+                install_dir = None
+                
+                if base_path.name == 'install' and base_path.parent.name == 'desktop':
+                    # Check webroot
+                    webroot = base_path.parent.parent
+                    install_dir = webroot / repo_name
+                elif base_path.name == 'install':
+                    # Check parent as webroot
+                    webroot = base_path.parent
+                    install_dir = webroot / repo_name
+                
+                # Fallback to ~/Applications/GitHub if not found in webroot
+                if not install_dir or not install_dir.exists():
+                    apps_dir = Path.home() / "Applications" / "GitHub"
+                    install_dir = apps_dir / repo_name
+                
+                try:
+                    if install_dir.exists():
+                        import shutil
+                        shutil.rmtree(install_dir)
+                        print(f"Removed {repo_name} from {install_dir}")
+                        
+                        # Also remove launch script if it exists
+                        launch_script = Path.home() / "Applications" / f"launch-{repo_name.lower()}.sh"
+                        if launch_script.exists():
+                            launch_script.unlink()
+                        
+                        return True
+                    return False
+                except Exception as e:
+                    print(f"Error removing {repo_name}: {e}")
+                    return False
+        
+        # Regular package manager uninstall
+        try:
+            if self.pkg_manager == "brew":
+                # Try uninstalling as cask first
+                result = subprocess.run(
+                    ["brew", "uninstall", "--cask", package],
+                    capture_output=True, text=True
+                )
+                if result.returncode == 0:
+                    return True
+                    
+                # Try as formula
+                result = subprocess.run(
+                    ["brew", "uninstall", package],
+                    capture_output=True, text=True
+                )
+                return result.returncode == 0
+                
+            elif self.pkg_manager == "apt":
+                subprocess.run(
+                    ["sudo", "apt-get", "remove", "-y", package],
+                    capture_output=True, text=True, check=True
+                )
+                return True
+                
+            elif self.pkg_manager in ["dnf", "yum"]:
+                subprocess.run(
+                    ["sudo", self.pkg_manager, "remove", "-y", package],
+                    capture_output=True, text=True, check=True
+                )
+                return True
+                
+            elif self.pkg_manager == "flatpak":
+                subprocess.run(
+                    ["flatpak", "uninstall", "-y", package],
+                    capture_output=True, text=True, check=True
+                )
+                return True
+                
+            elif self.pkg_manager == "winget":
+                subprocess.run(
+                    ["winget", "uninstall", package],
+                    capture_output=True, text=True, check=True
+                )
+                return True
+                
+        except subprocess.CalledProcessError as e:
+            print(f"Error uninstalling {package}: {e}")
             return False
         
         return False
@@ -480,6 +891,8 @@ class APIHandler(SimpleHTTPRequestHandler):
             self.handle_install(data)
         elif parsed_path.path == '/api/update':
             self.handle_update(data)
+        elif parsed_path.path == '/api/uninstall':
+            self.handle_uninstall(data)
         elif parsed_path.path == '/api/execute':
             self.handle_execute(data)
         elif parsed_path.path == '/api/llm':
@@ -540,13 +953,22 @@ class APIHandler(SimpleHTTPRequestHandler):
             return
         
         results = {}
+        errors = {}
         for package in packages:
-            results[package] = self.package_manager.install_package(package)
+            success, error_msg = self.package_manager.install_package(package)
+            results[package] = success
+            if not success and error_msg:
+                errors[package] = error_msg
         
-        self.send_json_response({
+        response = {
             'success': True,
             'results': results
-        })
+        }
+        
+        if errors:
+            response['errors'] = errors
+        
+        self.send_json_response(response)
     
     def handle_update(self, data):
         """Handle package updates"""
@@ -564,6 +986,23 @@ class APIHandler(SimpleHTTPRequestHandler):
         results = {}
         for package in packages:
             results[package] = self.package_manager.update_package(package)
+        
+        self.send_json_response({
+            'success': True,
+            'results': results
+        })
+    
+    def handle_uninstall(self, data):
+        """Handle package uninstallation"""
+        packages = data.get('packages', [])
+        
+        if not packages:
+            self.send_json_response({'error': 'No packages specified'}, 400)
+            return
+        
+        results = {}
+        for package in packages:
+            results[package] = self.package_manager.uninstall_package(package)
         
         self.send_json_response({
             'success': True,
