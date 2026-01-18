@@ -81,6 +81,10 @@
             background: var(--error);
         }
         
+        .status-dot.warning {
+            background: #f59e0b;
+        }
+        
         .packages-list {
             flex: 1;
             overflow-y: auto;
@@ -1174,6 +1178,11 @@ Examples:
             logTime('🔌 Checking server status...');
             const startTime = performance.now();
             
+            // Check if we're on localhost
+            const isLocalhost = window.location.hostname === 'localhost' || 
+                               window.location.hostname === '127.0.0.1' ||
+                               window.location.hostname === '';
+            
             try {
                 const response = await fetch('/api/status');
                 const data = await response.json();
@@ -1189,10 +1198,21 @@ Examples:
                 logTime(`❌ Server offline (${(performance.now() - startTime).toFixed(2)}ms)`, error);
                 
                 serverOnline = false;
-                document.getElementById('serverStatusDot').className = 'status-dot offline';
-                document.getElementById('serverVersion').textContent = 'Offline';
-                document.getElementById('osInfo').textContent = 'Server not running';
-                showServerOffline();
+                
+                if (!isLocalhost) {
+                    // Not on localhost - show different status
+                    document.getElementById('serverStatusDot').className = 'status-dot warning';
+                    document.getElementById('serverVersion').textContent = 'Run Locally to Install';
+                    document.getElementById('osInfo').textContent = 'View-only mode';
+                    // Don't show the offline alert for remote viewing
+                    document.getElementById('serverOffline').style.display = 'none';
+                } else {
+                    // On localhost - show offline status
+                    document.getElementById('serverStatusDot').className = 'status-dot offline';
+                    document.getElementById('serverVersion').textContent = 'Offline';
+                    document.getElementById('osInfo').textContent = 'Server not running';
+                    showServerOffline();
+                }
                 
                 // Hide all loading spinners immediately when server is offline
                 packagesData = packagesData.map(pkg => ({ ...pkg, statusLoading: false }));
@@ -1219,7 +1239,7 @@ Examples:
                 const pathDisplay = currentPath && currentPath !== '/' ? currentPath : '';
                 
                 commandsDiv.innerHTML = `
-                    <p style="margin-bottom: 12px;">The desktop installer is a submodule of the <a href="https://dreamstudio.com/webroot" target="_blank" style="color: var(--accent); text-decoration: underline;">webroot repo</a>.</p>
+                    <p style="margin-bottom: 12px;">The desktop installer is a submodule of the <a href="https://model.earth/webroot" target="_blank" style="color: var(--accent); text-decoration: underline;">webroot repo</a>.</p>
                     <p>Your localhost port link will be:</p>
                     <code style="margin-top: 8px;">http://localhost:8887${pathDisplay}</code>
                 `;
@@ -1386,6 +1406,11 @@ Examples:
                 return;
             }
             
+            if (!serverOnline) {
+                appendToConsole('⚠️  Server not running. Start the server to install apps.');
+                return;
+            }
+            
             logTime(`🔧 Installing ${selected.length} app(s)`, selected);
             addProgress(`Installing ${selected.length} app(s)...`);
             appendToConsole(`Installing ${selected.length} app(s)...`);
@@ -1396,6 +1421,12 @@ Examples:
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ packages: selected })
                 });
+                
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Server returned non-JSON response. Please check if server is running.');
+                }
                 
                 const data = await response.json();
                 
