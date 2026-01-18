@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Package Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f7f7f8;
+            --bg-tertiary: #f0f0f1;
+            --text-primary: #1f1f1f;
+            --text-secondary: #676767;
+            --text-tertiary: #9b9b9b;
+            --border: #e5e5e6;
+            --accent: #c17836;
+            --accent-hover: #a96830;
+            --success: #20a862;
+            --warning: #f59e0b;
+            --error: #e74c3c;
+            --shadow: rgba(0, 0, 0, 0.05);
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+        
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* Left Navigation */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-primary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .sidebar-header h1 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        
+        .server-info {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--success);
+        }
+        
+        .status-dot.offline {
+            background: var(--error);
+        }
+        
+        .packages-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+        
+        .package-item {
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-bottom: 2px;
+            cursor: pointer;
+            transition: background 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid transparent;
+        }
+        
+        .package-item:hover {
+            background: var(--bg-tertiary);
+        }
+        
+        .package-item.selected {
+            background: var(--bg-tertiary);
+            border-color: var(--border);
+        }
+        
+        .package-item.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        .package-item.commented {
+            opacity: 0.6;
+        }
+        
+        .package-checkbox {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            border: 1.5px solid var(--border);
+            flex-shrink: 0;
+            cursor: pointer;
+            appearance: none;
+            background: var(--bg-primary);
+            position: relative;
+        }
+        
+        .package-checkbox:checked {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        
+        .package-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            color: white;
+            font-size: 11px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .package-checkbox:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        
+        .package-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .package-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .package-description {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .package-status {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        
+        .status-icon {
+            font-size: 14px;
+        }
+        
+        .sidebar-footer {
+            padding: 12px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .main-header {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 32px;
+        }
+        
+        .main-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+        
+        .action-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: inherit;
+        }
+        
+        button:hover {
+            transform: translateY(-1px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+        
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #1a8c52;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 32px;
+        }
+        
+        .card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        
+        .card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+        
+        /* Console */
+        .console {
+            background: #1e1e1e;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .console-header {
+            padding: 10px 16px;
+            background: #2d2d2d;
+            font-size: 11px;
+            color: #858585;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        
+        .console-output {
+            padding: 16px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+            font-size: 12px;
+            color: #d4d4d4;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .console-input {
+            padding: 12px 16px;
+            background: #2d2d2d;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .console-input input {
+            flex: 1;
+            background: #1e1e1e;
+            border: 1px solid #3e3e3e;
+            border-radius: 4px;
+            padding: 8px 12px;
+            color: #d4d4d4;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 12px;
+        }
+        
+        .console-input input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        /* LLM Panel */
+        .llm-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 13px;
+            resize: vertical;
+            color: var(--text-primary);
+            background: var(--bg-primary);
+            line-height: 1.5;
+        }
+        
+        .llm-textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        .llm-textarea::placeholder {
+            color: var(--text-tertiary);
+        }
+        
+        .llm-response {
+            background: var(--bg-secondary);
+            padding: 16px;
+            border-radius: 6px;
+            margin-top: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        
+        .vibe-examples {
+            margin-top: 16px;
+        }
+        
+        .vibe-examples h4 {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        
+        .vibe-example {
+            background: var(--bg-secondary);
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.15s;
+            border: 1px solid transparent;
+        }
+        
+        .vibe-example:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--border);
+        }
+        
+        .help-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            padding: 16px;
+            border-radius: 6px;
+            margin-top: 16px;
+        }
+        
+        .help-section h4 {
+            font-size: 13px;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        
+        .help-section ul {
+            margin-left: 20px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+        
+        .help-section code {
+            background: var(--bg-tertiary);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-family: monospace;
+        }
+        
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-overlay.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--bg-primary);
+            padding: 32px;
+            border-radius: 12px;
+            max-width: 480px;
+            width: 90%;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .modal-content h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+        
+        .modal-content p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .modal-actions button {
+            width: 100%;
+            padding: 12px;
+        }
+        
+        /* Server Offline Alert */
+        .alert {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .alert h3 {
+            font-size: 15px;
+            color: #92400e;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .alert p {
+            font-size: 13px;
+            color: #78350f;
+            margin-bottom: 12px;
+        }
+        
+        .alert code {
+            background: #fffbeb;
+            padding: 10px 14px;
+            border-radius: 6px;
+            display: block;
+            margin: 8px 0;
+            font-family: monospace;
+            font-size: 12px;
+            color: #92400e;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--bg-tertiary);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-tertiary);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 220px;
+            }
+            
+            .content-area {
+                padding: 16px;
+            }
+            
+            .main-header {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Left Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>Desktop Apps</h1>
+                <div class="server-info">
+                    <span class="status-dot" id="serverStatusDot"></span>
+                    <span id="serverVersion">--</span>
+                </div>
+                <div class="server-info" style="margin-top: 4px;">
+                    <span style="font-size: 11px;" id="osInfo">Loading...</span>
+                </div>
+            </div>
+            
+            <div class="packages-list" id="packagesList">
+                <div style="padding: 20px; text-align: center; color: var(--text-tertiary); font-size: 12px;">
+                    <div class="loading-spinner" style="width: 20px; height: 20px; border-width: 3px;"></div>
+                    <div style="margin-top: 10px;">Loading apps...</div>
+                </div>
+            </div>
+            
+            <div class="sidebar-footer">
+                <button class="btn-secondary btn-small" onclick="selectAll()" style="flex: 1;">Select All</button>
+                <button class="btn-secondary btn-small" onclick="deselectAll()" style="flex: 1;">Clear</button>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="main-header">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h2 style="margin-bottom: 0;">Manage Desktop</h2>
+                    <div style="font-size: 14px; color: var(--text-secondary); font-weight: 500;">Production Suite</div>
+                </div>
+                <div class="action-bar">
+                    <button class="btn-primary" onclick="installSelected()">Install Selected</button>
+                    <button class="btn-success" onclick="showUpdateModal()">Update Apps</button>
+                    <button class="btn-secondary" onclick="refreshPackages()">Refresh</button>
+                </div>
+            </div>
+            
+            <div class="content-area">
+                <div id="serverOffline" class="alert" style="display: none;">
+                    <h3>⚠️ Server Not Running</h3>
+                    <p>Please start the server to use this interface:</p>
+                    <div id="startCommands"></div>
+                </div>
+                
+                <div class="card">
+                    <h3>Command Console</h3>
+                    <div class="console">
+                        <div class="console-header">TERMINAL</div>
+                        <div class="console-output" id="consoleOutput">Ready. Type 'help' for available commands.</div>
+                        <div class="console-input">
+                            <input type="text" id="commandInput" placeholder="Enter command..." onkeypress="handleCommandKey(event)">
+                            <button class="btn-primary btn-small" onclick="executeCommand()">Run</button>
+                        </div>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h4>Available Commands:</h4>
+                        <ul>
+                            <li><code>detect_os</code> - Show operating system</li>
+                            <li><code>detect_pm</code> - Show package manager</li>
+                            <li><code>list_packages</code> - List enabled packages</li>
+                            <li><code>server_version</code> - Show server version</li>
+                            <li><code>help</code> - Show this help</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>AI Assistant</h3>
+                    <textarea class="llm-textarea" id="llmPrompt" placeholder="Ask the AI to generate code modifications...
+
+Examples:
+• Add support for snap packages on Linux
+• Create a backup feature before updates
+• Add dark mode to the UI
+• Generate a progress indicator for installations"></textarea>
+                    <button class="btn-primary" onclick="sendToLLM()" style="margin-top: 12px; width: 100%;">Send to AI</button>
+                    <div id="llmResponse" style="display: none;"></div>
+                    
+                    <div class="vibe-examples">
+                        <h4>Quick Examples:</h4>
+                        <div class="vibe-example" onclick="useVibeExample(this)">
+                            Add support for Snap packages on Linux with automatic detection
+                        </div>
+                        <div class="vibe-example" onclick="useVibeExample(this)">
+                            Create a backup/restore feature for installed packages
+                        </div>
+                        <div class="vibe-example" onclick="useVibeExample(this)">
+                            Add real-time installation progress with percentage
+                        </div>
+                        <div class="vibe-example" onclick="useVibeExample(this)">
+                            Implement package dependency checking before installation
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Update Modal -->
+    <div class="modal-overlay" id="updateModal">
+        <div class="modal-content">
+            <h3>Update Apps</h3>
+            <p>Updates are available for some apps. How would you like to proceed?</p>
+            <div class="modal-actions">
+                <button class="btn-success" onclick="updateAll()">Update All Apps</button>
+                <button class="btn-primary" onclick="selectUpdates()">Select Updates Manually</button>
+                <button class="btn-secondary" onclick="closeUpdateModal()">No Updates</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let packagesData = [];
+        let serverOnline = false;
+        
+        // Logging with timestamps
+        function logTime(message, data = null) {
+            const timestamp = new Date().toISOString();
+            const timeFromStart = performance.now().toFixed(2);
+            console.log(`[${timestamp}] [+${timeFromStart}ms] ${message}`, data || '');
+        }
+        
+        logTime('🚀 Page loaded, starting initialization');
+        
+        // Initialize - show apps from desktop.conf immediately
+        async function init() {
+            logTime('📋 Starting init()');
+            
+            // First, parse desktop.conf directly to show list instantly
+            await loadPackagesFromConfig();
+            
+            // Then check server status
+            await checkServerStatus();
+            
+            // Finally, if server is online, fetch detailed status
+            if (serverOnline) {
+                await fetchPackageStatus();
+            }
+            
+            logTime('✅ Initialization complete');
+        }
+        
+        // Load apps from desktop.conf INSTANTLY (no API call needed initially)
+        async function loadPackagesFromConfig() {
+            logTime('🔍 Loading apps from config...');
+            const startTime = performance.now();
+            
+            try {
+                // Try to fetch desktop.conf directly with relative path
+                const response = await fetch('./desktop.conf');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const text = await response.text();
+                
+                logTime(`📄 Fetched desktop.conf (${(performance.now() - startTime).toFixed(2)}ms)`);
+                
+                // Parse the config file
+                const lines = text.split('\n');
+                const apps = [];
+                
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    
+                    // Skip empty lines and comments
+                    if (!trimmed || trimmed.startsWith('##')) continue;
+                    
+                    const isCommented = trimmed.startsWith('#');
+                    const cleanLine = isCommented ? trimmed.substring(1).trim() : trimmed;
+                    
+                    // Split on # to get name and description
+                    const parts = cleanLine.split('#');
+                    const name = parts[0].trim();
+                    const description = parts.length > 1 ? parts[1].trim() : '';
+                    
+                    if (name) {
+                        apps.push({
+                            name: name,
+                            description: description,
+                            enabled: !isCommented,
+                            statusLoading: true,
+                            installed: false,
+                            version: null,
+                            update_available: false
+                        });
+                    }
+                }
+                
+                packagesData = apps;
+                logTime(`✨ Parsed ${apps.length} apps, displaying immediately (${(performance.now() - startTime).toFixed(2)}ms total)`);
+                displayPackages();
+                
+            } catch (error) {
+                logTime('⚠️ Could not load desktop.conf directly, falling back to API', error.message);
+                // Fallback to API method
+                await loadPackagesFromAPI();
+            }
+        }
+        
+        // Fallback: Load package list from API
+        async function loadPackagesFromAPI() {
+            logTime('🔄 Fetching apps from API...');
+            const startTime = performance.now();
+            
+            try {
+                const response = await fetch('/api/packages');
+                const data = await response.json();
+                
+                logTime(`📦 Received API response (${(performance.now() - startTime).toFixed(2)}ms)`, data);
+                
+                packagesData = data.packages.map(pkg => ({
+                    ...pkg,
+                    statusLoading: true
+                }));
+                
+                displayPackages();
+                logTime(`✨ Displayed ${packagesData.length} apps from API`);
+                
+            } catch (error) {
+                logTime('❌ Error loading app list from API', error);
+                console.error('Error loading app list:', error);
+            }
+        }
+        
+        // Fetch full app status (called after initial display)
+        async function fetchPackageStatus() {
+            logTime('🔍 Fetching detailed app status...');
+            const startTime = performance.now();
+            
+            try {
+                // Use /api/packages which returns cached data instantly
+                // instead of /api/refresh which re-checks everything
+                const response = await fetch('/api/packages');
+                const data = await response.json();
+                
+                logTime(`📊 Received status data (${(performance.now() - startTime).toFixed(2)}ms)`);
+                
+                if (data.packages) {
+                    // Merge the status data with our existing packages
+                    packagesData = packagesData.map(pkg => {
+                        const serverData = data.packages.find(p => p.name === pkg.name);
+                        if (serverData) {
+                            return {
+                                ...pkg,
+                                ...serverData,
+                                statusLoading: false
+                            };
+                        }
+                        return { ...pkg, statusLoading: false };
+                    });
+                    
+                    displayPackages();
+                    logTime(`✅ Updated ${packagesData.length} app statuses`);
+                }
+            } catch (error) {
+                logTime('⚠️ Error fetching app status', error);
+                console.error('Error fetching app status:', error);
+                appendToConsole('Error fetching app status: ' + error.message);
+                
+                // Mark all as not loading even if error
+                packagesData = packagesData.map(pkg => ({ ...pkg, statusLoading: false }));
+                displayPackages();
+            }
+        }
+        
+        // Check server status
+        async function checkServerStatus() {
+            logTime('🔌 Checking server status...');
+            const startTime = performance.now();
+            
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                
+                logTime(`✅ Server online (${(performance.now() - startTime).toFixed(2)}ms)`, data);
+                
+                serverOnline = true;
+                document.getElementById('serverStatusDot').className = 'status-dot';
+                document.getElementById('serverVersion').textContent = `v${data.version}`;
+                document.getElementById('osInfo').textContent = `${data.os} • ${data.package_manager}`;
+                document.getElementById('serverOffline').style.display = 'none';
+            } catch (error) {
+                logTime(`❌ Server offline (${(performance.now() - startTime).toFixed(2)}ms)`, error);
+                
+                serverOnline = false;
+                document.getElementById('serverStatusDot').className = 'status-dot offline';
+                document.getElementById('serverVersion').textContent = 'Offline';
+                document.getElementById('osInfo').textContent = 'Server not running';
+                showServerOffline();
+            }
+        }
+        
+        // Show server offline message
+        function showServerOffline() {
+            const offlineDiv = document.getElementById('serverOffline');
+            const commandsDiv = document.getElementById('startCommands');
+            
+            const userAgent = navigator.userAgent.toLowerCase();
+            let commands = '';
+            
+            if (userAgent.includes('mac') || userAgent.includes('darwin')) {
+                commands = '<code>cd install<br>chmod +x server.py<br>python3 server.py</code>';
+            } else if (userAgent.includes('win')) {
+                commands = '<code>cd install<br>python server.py</code>';
+            } else {
+                commands = '<code>cd install<br>chmod +x server.py<br>python3 server.py</code>';
+            }
+            
+            commandsDiv.innerHTML = commands;
+            offlineDiv.style.display = 'block';
+        }
+        
+        // Display apps
+        function displayPackages() {
+            logTime('🎨 Displaying apps in UI');
+            const listDiv = document.getElementById('packagesList');
+            
+            if (packagesData.length === 0) {
+                listDiv.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-tertiary); font-size: 12px;">No apps found</div>';
+                return;
+            }
+            
+            listDiv.innerHTML = packagesData.map(pkg => createPackageHTML(pkg)).join('');
+            logTime(`✅ Displayed ${packagesData.length} apps in sidebar`);
+        }
+        
+        // Create app HTML
+        function createPackageHTML(pkg) {
+            const isCommented = !pkg.enabled;
+            const isInstalled = pkg.installed;
+            const hasUpdate = pkg.update_available;
+            const loading = pkg.statusLoading;
+            
+            // Status icons
+            let statusIcons = '';
+            if (loading) {
+                statusIcons = '<span class="loading-spinner"></span>';
+            } else {
+                if (isCommented) {
+                    statusIcons += '<span class="status-icon" title="Commented out">💤</span>';
+                }
+                if (!isInstalled) {
+                    statusIcons += '<span class="status-icon" title="Not installed">📥</span>';
+                }
+                if (isInstalled && !hasUpdate) {
+                    statusIcons += '<span class="status-icon" title="Installed">✓</span>';
+                }
+                if (hasUpdate) {
+                    statusIcons += '<span class="status-icon" title="Update available">🔄</span>';
+                }
+            }
+            
+            return `
+                <div class="package-item ${isCommented ? 'commented' : ''}" onclick="togglePackage('${pkg.name}')">
+                    <input type="checkbox" class="package-checkbox" 
+                           id="pkg-${pkg.name}" 
+                           ${isCommented ? 'disabled' : ''}
+                           onclick="event.stopPropagation()">
+                    <div class="package-info">
+                        <div class="package-name">${pkg.name}</div>
+                        ${pkg.description ? `<div class="package-description">${pkg.description}</div>` : ''}
+                        ${!loading && pkg.version && pkg.version !== 'unknown' ? `<div class="package-description">v${pkg.version}</div>` : ''}
+                    </div>
+                    <div class="package-status">
+                        ${statusIcons}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Toggle app selection
+        function togglePackage(name) {
+            const checkbox = document.getElementById(`pkg-${name}`);
+            if (checkbox && !checkbox.disabled) {
+                checkbox.checked = !checkbox.checked;
+            }
+        }
+        
+        // Get selected apps
+        function getSelectedPackages() {
+            return packagesData
+                .filter(pkg => {
+                    const checkbox = document.getElementById(`pkg-${pkg.name}`);
+                    return checkbox && checkbox.checked;
+                })
+                .map(pkg => pkg.name);
+        }
+        
+        // Install selected
+        async function installSelected() {
+            const selected = getSelectedPackages();
+            
+            if (selected.length === 0) {
+                appendToConsole('No apps selected');
+                return;
+            }
+            
+            logTime(`🔧 Installing ${selected.length} app(s)`, selected);
+            appendToConsole(`Installing ${selected.length} app(s)...`);
+            
+            try {
+                const response = await fetch('/api/install', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ packages: selected })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    appendToConsole('Installation completed!');
+                    for (const [pkg, success] of Object.entries(data.results)) {
+                        appendToConsole(`  ${pkg}: ${success ? '✓ Success' : '✗ Failed'}`);
+                    }
+                    await refreshPackages();
+                } else {
+                    appendToConsole('Installation failed: ' + data.error);
+                }
+            } catch (error) {
+                appendToConsole('Error: ' + error.message);
+            }
+        }
+        
+        // Show update modal
+        function showUpdateModal() {
+            const hasUpdates = packagesData.some(pkg => pkg.update_available);
+            
+            if (!hasUpdates) {
+                appendToConsole('No updates available');
+                return;
+            }
+            
+            document.getElementById('updateModal').classList.add('show');
+        }
+        
+        // Close update modal
+        function closeUpdateModal() {
+            document.getElementById('updateModal').classList.remove('show');
+        }
+        
+        // Update all
+        async function updateAll() {
+            closeUpdateModal();
+            logTime('🔄 Updating all apps');
+            appendToConsole('Updating all apps...');
+            
+            try {
+                const response = await fetch('/api/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mode: 'all' })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    appendToConsole('Updates completed!');
+                    for (const [pkg, success] of Object.entries(data.results)) {
+                        appendToConsole(`  ${pkg}: ${success ? '✓ Updated' : '✗ Failed'}`);
+                    }
+                    await refreshPackages();
+                } else {
+                    appendToConsole('Update failed: ' + data.error);
+                }
+            } catch (error) {
+                appendToConsole('Error: ' + error.message);
+            }
+        }
+        
+        // Select updates
+        function selectUpdates() {
+            closeUpdateModal();
+            
+            packagesData.forEach(pkg => {
+                if (pkg.update_available) {
+                    const checkbox = document.getElementById(`pkg-${pkg.name}`);
+                    if (checkbox) checkbox.checked = true;
+                }
+            });
+            
+            appendToConsole('Apps with updates selected. Click "Install Selected" to update.');
+        }
+        
+        // Refresh apps
+        async function refreshPackages() {
+            logTime('🔄 Refreshing app list');
+            appendToConsole('Refreshing app list...');
+            
+            // Show loading spinners
+            packagesData = packagesData.map(pkg => ({ ...pkg, statusLoading: true }));
+            displayPackages();
+            
+            const startTime = performance.now();
+            
+            try {
+                const response = await fetch('/api/refresh', { method: 'POST' });
+                const data = await response.json();
+                
+                const duration = (performance.now() - startTime).toFixed(2);
+                
+                if (data.success) {
+                    packagesData = data.packages.map(pkg => ({
+                        ...pkg,
+                        statusLoading: false
+                    }));
+                    displayPackages();
+                    
+                    if (data.cached) {
+                        logTime(`✅ Used cached data (${data.cache_age}s old, ${duration}ms)`);
+                        appendToConsole(`App list refreshed (used cache, ${data.cache_age}s old)`);
+                    } else {
+                        logTime(`✅ Refreshed from system (${duration}ms)`);
+                        appendToConsole('App list refreshed from system');
+                    }
+                }
+            } catch (error) {
+                logTime('❌ Refresh failed', error);
+                appendToConsole('Error refreshing: ' + error.message);
+            }
+        }
+        
+        // Select all
+        function selectAll() {
+            packagesData.forEach(pkg => {
+                if (pkg.enabled) {
+                    const checkbox = document.getElementById(`pkg-${pkg.name}`);
+                    if (checkbox) checkbox.checked = true;
+                }
+            });
+        }
+        
+        // Deselect all
+        function deselectAll() {
+            packagesData.forEach(pkg => {
+                const checkbox = document.getElementById(`pkg-${pkg.name}`);
+                if (checkbox) checkbox.checked = false;
+            });
+        }
+        
+        // Execute command
+        async function executeCommand() {
+            const input = document.getElementById('commandInput');
+            const command = input.value.trim();
+            
+            if (!command) return;
+            
+            appendToConsole(`> ${command}`);
+            input.value = '';
+            
+            if (command === 'help') {
+                appendToConsole('Available commands:');
+                appendToConsole('  detect_os, detect_pm, list_packages, server_version, help');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/execute', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    appendToConsole(JSON.stringify(data.result, null, 2));
+                } else {
+                    appendToConsole('Error: ' + data.error);
+                }
+            } catch (error) {
+                appendToConsole('Error: ' + error.message);
+            }
+        }
+        
+        // Handle command key
+        function handleCommandKey(event) {
+            if (event.key === 'Enter') {
+                executeCommand();
+            }
+        }
+        
+        // Send to LLM
+        async function sendToLLM() {
+            const promptInput = document.getElementById('llmPrompt');
+            const prompt = promptInput.value.trim();
+            
+            if (!prompt) {
+                appendToConsole('Please enter a prompt');
+                return;
+            }
+            
+            logTime('🤖 Sending to LLM', { prompt });
+            appendToConsole('Sending to AI...');
+            
+            const responseDiv = document.getElementById('llmResponse');
+            responseDiv.style.display = 'block';
+            responseDiv.className = 'llm-response';
+            responseDiv.innerHTML = '<div class="loading-spinner"></div> Processing...';
+            
+            try {
+                const response = await fetch('/api/llm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        prompt,
+                        context: `Current apps: ${packagesData.map(p => p.name).join(', ')}`
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    responseDiv.textContent = data.response;
+                    appendToConsole('AI response received');
+                } else {
+                    responseDiv.textContent = 'Error: ' + data.error;
+                    appendToConsole('AI error: ' + data.error);
+                }
+            } catch (error) {
+                responseDiv.textContent = 'Error: ' + error.message;
+                appendToConsole('Error: ' + error.message);
+            }
+        }
+        
+        // Use vibe example
+        function useVibeExample(element) {
+            const text = element.textContent.trim();
+            document.getElementById('llmPrompt').value = text;
+        }
+        
+        // Append to console
+        function appendToConsole(message) {
+            const output = document.getElementById('consoleOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            output.textContent += `\n[${timestamp}] ${message}`;
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        // Initialize
+        init();
+    </script>
+</body>
+</html>
