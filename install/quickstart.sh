@@ -8,6 +8,12 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+# Check if running from CLI (automated mode)
+CLI_MODE=false
+if [[ "$1" == "--cli" ]] || [[ "$1" == "--automated" ]]; then
+    CLI_MODE=true
+fi
+
 echo "╔═══════════════════════════════════════════════════════════╗"
 echo "║   Cross-Platform Package Manager - Quick Start           ║"
 echo "╚═══════════════════════════════════════════════════════════╝"
@@ -127,11 +133,42 @@ echo "   - Use the web UI for visual app management"
 echo "   - Use AI Assistant for custom modifications"
 echo "   - Check the console for command examples"
 echo ""
-echo "Press Enter to start the server now, or Ctrl+C to exit..."
-read -r
+
+# Skip Enter prompt if in CLI mode
+if [ "$CLI_MODE" = false ]; then
+    echo "Press Enter to start the server now, or Ctrl+C to exit..."
+    read -r
+fi
+
+# Start server with virtual environment
+echo ""
+echo "🚀 Starting server with virtual environment..."
+echo ""
+
+# Create virtual environment if it doesn't exist
+if [ ! -d "env" ]; then
+    echo "Creating virtual environment..."
+    $PYTHON -m venv env
+fi
+
+# Activate virtual environment
+if [ -f "env/bin/activate" ]; then
+    source env/bin/activate
+elif [ -f "env/Scripts/activate" ]; then
+    source env/Scripts/activate
+fi
+
+# Install anthropic package if needed and API key is configured
+if [ -f "$ENV_PATH" ]; then
+    if ! grep -q "ANTHROPIC_API_KEY=your_api_key_here" "$ENV_PATH" && \
+       ! grep -q "ANTHROPIC_API_KEY=$" "$ENV_PATH"; then
+        # API key is configured, ensure anthropic package is installed
+        if ! $PYTHON -c "import anthropic" 2>/dev/null; then
+            echo "Installing anthropic package for Claude API..."
+            $PYTHON -m pip install anthropic --quiet
+        fi
+    fi
+fi
 
 # Start server
-echo ""
-echo "🚀 Starting server..."
-echo ""
 $PYTHON server.py --port 8887
