@@ -8,6 +8,12 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+# Check if running from CLI (automated mode)
+CLI_MODE=false
+if [[ "$1" == "--cli" ]] || [[ "$1" == "--automated" ]]; then
+    CLI_MODE=true
+fi
+
 echo "╔═══════════════════════════════════════════════════════════╗"
 echo "║   Desktop Production Suite Installer                     ║"
 echo "╚═══════════════════════════════════════════════════════════╝"
@@ -46,17 +52,26 @@ if [ -f "$ENV_PATH" ]; then
     fi
 else
     echo "⚠️  No .env file found"
-    echo "  To enable LLM features:"
-    echo "  1. Copy .env.example to ../../docker/.env"
-    echo "  2. Add your Anthropic API key"
-    echo ""
-    echo "  Create .env now? (y/n)"
-    read -r response
-    if [[ "$response" =~ ^[Yy]$ ]]; then
-        mkdir -p "../../docker"
-        cp .env.example "$ENV_PATH"
-        echo "✓ Created $ENV_PATH"
-        echo "  Please edit it to add your API key"
+    if [ "$CLI_MODE" = false ]; then
+        echo "  To enable LLM features:"
+        echo "  1. Copy .env.example to ../../docker/.env"
+        echo "  2. Add your Anthropic API key"
+        echo ""
+        echo "  Create .env now? (y/n)"
+        read -r response
+        if [[ "$response" =~ ^[Yy]$ ]]; then
+            mkdir -p "../../docker"
+            cp .env.example "$ENV_PATH"
+            echo "✓ Created $ENV_PATH"
+            echo "  Please edit it to add your API key"
+        fi
+    else
+        # In CLI mode, create .env silently if .env.example exists
+        if [ -f ".env.example" ]; then
+            mkdir -p "../../docker"
+            cp .env.example "$ENV_PATH"
+            echo "  (Created $ENV_PATH from template - edit to add API key)"
+        fi
     fi
 fi
 
@@ -68,15 +83,20 @@ if $PYTHON -c "import anthropic" 2>/dev/null; then
     echo "✓ Anthropic package installed"
 else
     echo "⚠️  Anthropic package not installed"
-    echo "  Install it for LLM features: pip install anthropic"
-    echo ""
-    echo "  Install now? (y/n)"
-    read -r response
-    if [[ "$response" =~ ^[Yy]$ ]]; then
-        echo "  Installing..."
-        $PYTHON -m pip install anthropic --break-system-packages 2>/dev/null || \
-        $PYTHON -m pip install anthropic
-        echo "✓ Installed"
+    if [ "$CLI_MODE" = false ]; then
+        echo "  Install it for LLM features: pip install anthropic"
+        echo ""
+        echo "  Install now? (y/n)"
+        read -r response
+        if [[ "$response" =~ ^[Yy]$ ]]; then
+            echo "  Installing..."
+            $PYTHON -m pip install anthropic --break-system-packages 2>/dev/null || \
+            $PYTHON -m pip install anthropic
+            echo "✓ Installed"
+        fi
+    else
+        # In CLI mode, skip prompting - will be installed later in venv if API key is configured
+        echo "  (Will install in virtual environment if API key is configured)"
     fi
 fi
 
@@ -127,11 +147,42 @@ echo "   - Use the web UI for visual app management"
 echo "   - Use AI Assistant for custom modifications"
 echo "   - Check the console for command examples"
 echo ""
-echo "Press Enter to start the server now, or Ctrl+C to exit..."
-read -r
+
+# Skip Enter prompt if in CLI mode
+if [ "$CLI_MODE" = false ]; then
+    echo "Press Enter to start the server now, or Ctrl+C to exit..."
+    read -r
+fi
+
+# Start server with virtual environment
+echo ""
+echo "🚀 Starting server with virtual environment..."
+echo ""
+
+# Create virtual environment if it doesn't exist
+if [ ! -d "env" ]; then
+    echo "Creating virtual environment..."
+    $PYTHON -m venv env
+fi
+
+# Activate virtual environment
+if [ -f "env/bin/activate" ]; then
+    source env/bin/activate
+elif [ -f "env/Scripts/activate" ]; then
+    source env/Scripts/activate
+fi
+
+# Install anthropic package if needed and API key is configured
+if [ -f "$ENV_PATH" ]; then
+    if ! grep -q "ANTHROPIC_API_KEY=your_api_key_here" "$ENV_PATH" && \
+       ! grep -q "ANTHROPIC_API_KEY=$" "$ENV_PATH"; then
+        # API key is configured, ensure anthropic package is installed
+        if ! $PYTHON -c "import anthropic" 2>/dev/null; then
+            echo "Installing anthropic package for Claude API..."
+            $PYTHON -m pip install anthropic --quiet
+        fi
+    fi
+fi
 
 # Start server
-echo ""
-echo "🚀 Starting server..."
-echo ""
 $PYTHON server.py --port 8887

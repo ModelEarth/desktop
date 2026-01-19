@@ -799,19 +799,24 @@ class LLMIntegration:
     def load_api_key(self):
         """Load API key from .env file two levels up"""
         env_path = Path(__file__).parent.parent.parent / "docker" / ".env"
-        
+
         if not env_path.exists():
             return None
-        
+
         try:
             with open(env_path, 'r') as f:
                 for line in f:
                     line = line.strip()
                     if line.startswith('ANTHROPIC_API_KEY='):
-                        return line.split('=', 1)[1].strip().strip('"\'')
+                        # Get value after =, strip quotes and whitespace
+                        value = line.split('=', 1)[1].strip().strip('"\'')
+                        # Remove inline comments (# comment)
+                        if '#' in value:
+                            value = value.split('#')[0].strip()
+                        return value
         except Exception as e:
             print(f"Error loading API key: {e}")
-        
+
         return None
     
     def send_prompt(self, prompt, context=""):
