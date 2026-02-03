@@ -1033,6 +1033,7 @@ class APIHandler(SimpleHTTPRequestHandler):
             'detect_pm': lambda: {'package_manager': self.package_manager.pkg_manager},
             'list_packages': lambda: {'packages': self.package_manager.read_packages()[0]},
             'server_version': lambda: {'version': VERSION},
+            'stop_server': self.stop_server,
         }
         
         if command in safe_commands:
@@ -1040,6 +1041,15 @@ class APIHandler(SimpleHTTPRequestHandler):
             self.send_json_response({'success': True, 'result': result})
         else:
             self.send_json_response({'error': 'Unknown or unsafe command'}, 400)
+
+    def stop_server(self):
+        """Stop the server after responding to the client."""
+        def shutdown_server():
+            time.sleep(0.2)
+            self.server.shutdown()
+
+        threading.Thread(target=shutdown_server, daemon=True).start()
+        return {'message': 'Server shutdown initiated'}
     
     def handle_llm(self, data):
         """Handle LLM prompts"""
