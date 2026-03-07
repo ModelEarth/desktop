@@ -800,6 +800,27 @@
                     <div id="startCommands"></div>
                 </div>
                 
+                <div class="card" id="claudeDownloadCard">
+                    <h3>Claude Desktop</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px;">AI assistant for Mac, Windows, and Linux</p>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                        <a href="https://claude.ai/download" target="_blank" id="claudePrimaryDownload"
+                           style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--accent); color: #fff; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 500;">
+                            <span id="claudeOsLabel">Download Claude</span>
+                        </a>
+                    </div>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        <a href="https://claude.ai/download" target="_blank"
+                           style="color: var(--text-secondary); font-size: 12px; text-decoration: none;">macOS</a>
+                        <span style="color: var(--border);">•</span>
+                        <a href="https://claude.ai/download" target="_blank"
+                           style="color: var(--text-secondary); font-size: 12px; text-decoration: none;">Windows</a>
+                        <span style="color: var(--border);">•</span>
+                        <a href="https://claude.ai/download" target="_blank"
+                           style="color: var(--text-secondary); font-size: 12px; text-decoration: none;">Linux</a>
+                    </div>
+                </div>
+
                 <div class="card">
                     <h3>Command Console</h3>
                     <div class="console">
@@ -1018,7 +1039,23 @@ Examples:
         }
         
         logTime('🚀 Page loaded, starting initialization');
-        
+
+        // Detect platform and update Claude download label
+        (function updateClaudeDownloadLabel() {
+            const ua = navigator.userAgent.toLowerCase();
+            const label = document.getElementById('claudeOsLabel');
+            if (!label) return;
+            if (ua.includes('mac') || ua.includes('darwin')) {
+                label.textContent = 'Download for Mac';
+            } else if (ua.includes('win')) {
+                label.textContent = 'Download for Windows';
+            } else if (ua.includes('linux')) {
+                label.textContent = 'Download for Linux';
+            } else {
+                label.textContent = 'Download Claude';
+            }
+        })();
+
         // Initialize - show apps from packages.conf immediately
         async function init() {
             logTime('📋 Starting init()');
@@ -1300,10 +1337,27 @@ Examples:
             const isInstalled = pkg.installed;
             const hasUpdate = pkg.update_available;
             const loading = pkg.statusLoading;
-            
+
             // Format the display name
             const displayName = formatPackageName(pkg.name);
-            
+
+            // Claude gets a special download entry (not a package-manager install)
+            if (pkg.name === 'claude') {
+                return `
+                    <a href="https://claude.ai/download" target="_blank" style="text-decoration: none; color: inherit;">
+                        <div class="package-item" style="border-left: 3px solid var(--accent);">
+                            <div class="package-info">
+                                <div class="package-name">${displayName}</div>
+                                <div class="package-description">AI Assistant</div>
+                            </div>
+                            <div class="package-status">
+                                <span class="status-icon" title="Download from claude.ai">↓</span>
+                            </div>
+                        </div>
+                    </a>
+                `;
+            }
+
             // Status icons
             let statusIcons = '';
             if (loading) {
@@ -1322,11 +1376,11 @@ Examples:
                     statusIcons += '<span class="status-icon" title="Update available">🔄</span>';
                 }
             }
-            
+
             return `
                 <div class="package-item ${isCommented ? 'commented' : ''}" onclick="togglePackage('${pkg.name}')">
-                    <input type="checkbox" class="package-checkbox" 
-                           id="pkg-${pkg.name}" 
+                    <input type="checkbox" class="package-checkbox"
+                           id="pkg-${pkg.name}"
                            ${isCommented ? 'disabled' : ''}
                            onchange="updateButtonStates()"
                            onclick="event.stopPropagation()">
