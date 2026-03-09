@@ -8,10 +8,43 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Check if running from CLI (automated mode)
 CLI_MODE=false
-if [[ "$1" == "--cli" ]] || [[ "$1" == "--automated" ]]; then
-    CLI_MODE=true
+SERVER_PORT="8887"
+
+# Parse args:
+#   --cli / --automated
+#   --port <num> or --port=<num>
+#   <num> (positional port)
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --cli|--automated)
+            CLI_MODE=true
+            shift
+            ;;
+        --port)
+            if [[ -z "$2" ]]; then
+                echo "✗ Missing value for --port"
+                exit 1
+            fi
+            SERVER_PORT="$2"
+            shift 2
+            ;;
+        --port=*)
+            SERVER_PORT="${1#--port=}"
+            shift
+            ;;
+        *)
+            if [[ "$1" =~ ^[0-9]+$ ]]; then
+                SERVER_PORT="$1"
+            fi
+            shift
+            ;;
+    esac
+done
+
+if ! [[ "$SERVER_PORT" =~ ^[0-9]+$ ]]; then
+    echo "✗ Invalid port: $SERVER_PORT"
+    exit 1
 fi
 
 echo "╔═══════════════════════════════════════════════════════════╗"
@@ -129,10 +162,10 @@ echo ""
 echo "📚 Next Steps:"
 echo ""
 echo "1. Start the server:"
-echo "   $PYTHON server.py"
+echo "   $PYTHON server.py --port $SERVER_PORT"
 echo ""
 echo "2. Open your browser to:"
-echo "   http://localhost:8887"
+echo "   http://localhost:$SERVER_PORT"
 echo ""
 echo "3. Or use the command line:"
 echo "   ./setup.sh"
@@ -184,5 +217,12 @@ if [ -f "$ENV_PATH" ]; then
     fi
 fi
 
+# Stop any existing process bound to requested port
+if lsof -ti:"$SERVER_PORT" >/dev/null 2>&1; then
+    echo "⚠️  Port $SERVER_PORT is in use. Stopping existing process(es)..."
+    lsof -ti:"$SERVER_PORT" | xargs kill -9 2>/dev/null || true
+    sleep 1
+fi
+
 # Start server
-$PYTHON server.py --port 8887
+$PYTHON server.py --port "$SERVER_PORT"
