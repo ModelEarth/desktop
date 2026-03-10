@@ -10,10 +10,10 @@
 
 <meta name="keywords" content="Creative Suite, software install scripts, open source, software, free, Open Desktop, Adobe Creative Cloud, LibreOffice, Microsoft Office, GIMP, Blender, InkScape, Lightworks, Professional, Education">
 
-<title>Desktop Production Suite</title>
+<title>Desktop Suite</title>
 
 <link type="text/css" rel="stylesheet" href="/localsite/css/base.css" id="/localsite/css/base.css" />
-<script type="text/javascript" src="/localsite/js/localsite.js?showheader=true"></script>
+<script type="text/javascript" src="/localsite/js/localsite.js?showheader=true&showsearch=true"></script>
 
 <style>
 	.navlink-desktop {
@@ -34,6 +34,21 @@
 	  color: #111;
 	  color:#777;
 	}
+
+	.suiteTitle {
+		text-align:center;
+	}
+	.suiteTitle {
+		text-alignX:left;
+		font-weight: 200;
+		font-size: 28px;
+	}
+	@media (max-width: 600px) {
+		
+		.newLineMobile {
+			display: block;
+		}
+	}
 </style>
 
 <script>
@@ -53,16 +68,21 @@ loadMarkdown("README.md", "readmeDiv", "_parent");
 
 <div class="lite" style="padding-bottom:30px;">
 <br>
-
-<h3 style="text-align:center;">Desktop Production Suite</h3>
+<!-- Desktop Production Suite -->
+<h3 class="suiteTitle">Desktop Suite</h3>
 
 <div style="text-align: center;">
 
-	Collaborative tools for art, science and industry. Organize your world.<br>
+	<div style="margin-bottom: 10px;">
+		Collaborative tools for art, science&nbsp;and&nbsp;industry. 
+		<span class="newLineMobile" style="margin-bottom:10px">Organize&nbsp;your&nbsp;world.</span>
+	</div>
 
+	<span class="showdesktop" style="display:none">
 	Our installer provides an easy way for schools and offices to update Macs and PCs.<br><br>
-			
-		<div style="display:table; text-align:left; margin:0 auto; border:1px solid #ddd; padding:20px 22px 0 25px; border-radius:18px;">
+	</span>
+
+		<div id="appListHolder" style="display:table; text-align:left; margin:0 auto; max-width:calc(100% - 40px); border:1px solid #ddd; padding:20px 22px 0 25px; border-radius:18px;" class="lite">
 			<div style="float:left;margin:0 30px 20px 0">
 
 
@@ -121,10 +141,11 @@ loadMarkdown("README.md", "readmeDiv", "_parent");
 
 	<div style="text-align:center">
 		
-		<br>
-		If you also work with Adobe InDesign, save your files as IDML.<br>
-		IDML files can be opened with Scribus.<br>
-
+		<span class="showdesktop" style="display:none">
+			<br>
+			If you also work with Adobe InDesign, save your files as IDML.<br>
+			IDML files can be opened with Scribus.<br>
+		</span>
 		<!--
 		Our installer includes Scribus 1.4.8, so you'll need to downloand Scribus 1.5 directly.
 		-->
