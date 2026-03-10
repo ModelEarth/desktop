@@ -43,6 +43,59 @@
 		font-weight: 200;
 		font-size: 28px;
 	}
+	#desktopTopIcons {
+		text-align: center;
+		margin-top: 10px;
+		container-type: inline-size;
+	}
+	#desktopTopIcons img {
+		--top-icon-scale: 1;
+		height: auto;
+	}
+	#desktopTopIcons img:nth-child(1) {
+		width: calc(128px * var(--top-icon-scale));
+	}
+	#desktopTopIcons img:nth-child(2) {
+		width: calc(140px * var(--top-icon-scale));
+		margin: calc(17px * var(--top-icon-scale)) calc(4px * var(--top-icon-scale)) 0 calc(7px * var(--top-icon-scale));
+	}
+	#desktopTopIcons img:nth-child(3) {
+		width: calc(128px * var(--top-icon-scale));
+	}
+	@container (max-width: 430px) {
+		#desktopTopIcons img {
+			--top-icon-scale: 0.406667;
+		}
+	}
+	#desktopPageWrap {
+		padding-bottom: 30px;
+		container-type: inline-size;
+	}
+	#desktopSuiteContent {
+		text-align: center;
+	}
+	.desktopPanelCard {
+		margin: 0 auto;
+		max-width: calc(100% - 40px);
+		border: 1px solid #ddd;
+		padding: 20px 22px 0 25px;
+		border-radius: 18px;
+	}
+	#appListHolder {
+		display: table;
+		text-align: left;
+	}
+	#readmeHolder {
+		max-width: min(620px, calc(100% - 40px));
+		margin-left: auto;
+		margin-right: auto;
+	}
+	@container (max-width: 580px) {
+		.desktopPanelCard {
+			border: none;
+			padding: 0;
+		}
+	}
 	@media (max-width: 600px) {
 		
 		.newLineMobile {
@@ -60,18 +113,18 @@ loadMarkdown("README.md", "readmeDiv", "_parent");
 
 <body>
 
-<div style="text-align:center; margin-top:10px">
+<div id="desktopTopIcons">
 	<img src="https://dreamstudio.com/img/apps/gimp_99062.png">
-	<img src="https://dreamstudio.com/img/apps/blender.png" style="max-width:140px;margin:17px 4px 0 7px">
-	<img src="https://dreamstudio.com/img/apps/inkscape.png" style="max-width:128px">
+	<img src="https://dreamstudio.com/img/apps/blender.png">
+	<img src="https://dreamstudio.com/img/apps/inkscape.png">
 </div>
 
-<div class="lite" style="padding-bottom:30px;">
+<div id="desktopPageWrap" class="lite">
 <br>
 <!-- Desktop Production Suite -->
 <h3 class="suiteTitle">Desktop Suite</h3>
 
-<div style="text-align: center;">
+<div id="desktopSuiteContent">
 
 	<div style="margin-bottom: 10px;">
 		Collaborative tools for art, science&nbsp;and&nbsp;industry. 
@@ -82,7 +135,7 @@ loadMarkdown("README.md", "readmeDiv", "_parent");
 	Our installer provides an easy way for schools and offices to update Macs and PCs.<br><br>
 	</span>
 
-		<div id="appListHolder" style="display:table; text-align:left; margin:0 auto; max-width:calc(100% - 40px); border:1px solid #ddd; padding:20px 22px 0 25px; border-radius:18px;" class="lite">
+		<div id="appListHolder" class="lite desktopPanelCard">
 			<div style="float:left;margin:0 30px 20px 0">
 
 
@@ -170,7 +223,7 @@ loadMarkdown("README.md", "readmeDiv", "_parent");
     	font-size: 16px;
   	}
 	</style>
-	<div class="content contentpadding" style="max-width:700px; border:1px solid #ddd; border-radius:18px; padding:20px 22px 0 25px">
+	<div id="readmeHolder" class="content contentpadding desktopPanelCard">
 	  <div id="readmeDiv"></div>
 
 	  <div class="code" id="macDiv"></div>

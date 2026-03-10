@@ -2,7 +2,7 @@
 
 [OpenDesktop Storage](https://www.opendesktop.org) &ndash; LibreOffice cloud services
 
-[Office.com](https://office.com) &ndash; Collaborate for free with online versions of Microsoft Word, PowerPoint and Excel. <!-- Save documents, workbooks, and presentations online. -->
+[Office.com](https://office.com) &ndash; Collaborate for free with online versions of Microsoft&nbsp;Word,&nbsp;PowerPoint&nbsp;and&nbsp;Excel. <!-- Save documents, workbooks, and presentations online. -->
 
 #### We adhere to Microsoft's commitment to:
 
