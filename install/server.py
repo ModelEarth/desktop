@@ -1113,6 +1113,8 @@ def main():
                        help=f'Port to run server on (default: {DEFAULT_PORT})')
     parser.add_argument('--verbose', action='store_true', 
                        help='Enable verbose logging')
+    parser.add_argument('--no-port-shift', action='store_true',
+                       help='Exit if requested port is busy instead of auto-selecting another port')
     args = parser.parse_args()
     
     # Initialize package manager
@@ -1147,11 +1149,16 @@ def main():
     
     # Find available port
     port = args.port
-    while is_port_in_use(port) and port < args.port + 10:
-        port += 1
-    
-    if port != args.port:
-        print(f"Port {args.port} is in use, using port {port} instead")
+    if args.no_port_shift:
+        if is_port_in_use(port):
+            print(f"Port {args.port} is in use. Exiting because --no-port-shift was provided.")
+            sys.exit(1)
+    else:
+        while is_port_in_use(port) and port < args.port + 10:
+            port += 1
+        
+        if port != args.port:
+            print(f"Port {args.port} is in use, using port {port} instead")
     
     # Start server
     server_address = ('', port)

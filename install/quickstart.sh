@@ -11,6 +11,27 @@ cd "$SCRIPT_DIR"
 CLI_MODE=false
 SERVER_PORT="8887"
 
+print_manual_port_release_instructions() {
+    local port="$1"
+
+    echo ""
+    echo "✗ Port $port is still in use."
+    echo "  The current environment could not stop the process automatically."
+    echo "  Run this command in a regular terminal outside Agent CLI:"
+    echo "  lsof -ti:$port | xargs kill -9"
+    echo ""
+    echo "Then run quickstart in a virtual environment:"
+    echo "macOS/Linux:"
+    echo "python3 -m venv env"
+    echo "source env/bin/activate"
+    echo "./desktop/install/quickstart.sh $port"
+    echo ""
+    echo "Windows:"
+    echo "python -m venv env"
+    echo "env\\Scripts\\activate"
+    echo "./desktop/install/quickstart.sh $port"
+}
+
 # Parse args:
 #   --cli / --automated
 #   --port <num> or --port=<num>
@@ -180,6 +201,17 @@ echo "   - Use the web UI for visual app management"
 echo "   - Use AI Assistant for custom modifications"
 echo "   - Check the console for command examples"
 echo ""
+echo "🧪 Run quickstart in a virtual environment (from webroot):"
+echo "macOS/Linux:"
+echo "python3 -m venv env"
+echo "source env/bin/activate"
+echo "./desktop/install/quickstart.sh $SERVER_PORT"
+echo ""
+echo "Windows:"
+echo "python -m venv env"
+echo "env\\Scripts\\activate"
+echo "./desktop/install/quickstart.sh $SERVER_PORT"
+echo ""
 
 # Skip Enter prompt if in CLI mode
 if [ "$CLI_MODE" = false ]; then
@@ -222,7 +254,12 @@ if lsof -ti:"$SERVER_PORT" >/dev/null 2>&1; then
     echo "⚠️  Port $SERVER_PORT is in use. Stopping existing process(es)..."
     lsof -ti:"$SERVER_PORT" | xargs kill -9 2>/dev/null || true
     sleep 1
+
+    if lsof -ti:"$SERVER_PORT" >/dev/null 2>&1; then
+        print_manual_port_release_instructions "$SERVER_PORT"
+        exit 1
+    fi
 fi
 
 # Start server
-$PYTHON server.py --port "$SERVER_PORT"
+$PYTHON server.py --port "$SERVER_PORT" --no-port-shift
