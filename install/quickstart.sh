@@ -92,12 +92,27 @@ fi
 
 echo ""
 
-# Check if .env exists
+# Check if .env exists (its location is set by env_file in ../../automation/paths.yaml)
 echo "🔍 Checking for API key configuration..."
-ENV_PATH="../../docker/.env"
-if [ -f "$ENV_PATH" ]; then
+PATHS_YAML="../../automation/paths.yaml"
+ENV_PATH=""
+if [ -f "$PATHS_YAML" ]; then
+    ENV_FILE_SETTING=$(sed -n 's/^[[:space:]]*env_file:[[:space:]]*//p' "$PATHS_YAML" | head -1 | sed 's/[[:space:]]#.*$//; s/[[:space:]]*$//; s/^["'"'"']//; s/["'"'"']$//')
+    if [ -n "$ENV_FILE_SETTING" ]; then
+        ENV_PATH="../../automation/$ENV_FILE_SETTING"
+    fi
+fi
+
+if [ -z "$ENV_PATH" ]; then
+    echo "⚠️  No env_file set in automation/paths.yaml"
+    echo "  To enable LLM features:"
+    echo "  1. Copy automation/paths.example.yaml to automation/paths.yaml"
+    echo "  2. Set env_file to a .env file in a folder outside your webroot"
+    echo "  3. Add your Anthropic API key to that .env file (see .env.example)"
+elif [ -f "$ENV_PATH" ]; then
     if grep -q "ANTHROPIC_API_KEY=your_api_key_here" "$ENV_PATH" || \
-       grep -q "ANTHROPIC_API_KEY=$" "$ENV_PATH"; then
+       grep -q "ANTHROPIC_API_KEY=$" "$ENV_PATH" || \
+       ! grep -q "^ANTHROPIC_API_KEY=" "$ENV_PATH"; then
         echo "⚠️  .env file found but API key not configured"
         echo "  Edit $ENV_PATH to add your Anthropic API key"
         echo "  (Optional: LLM features will be disabled without it)"
@@ -105,27 +120,20 @@ if [ -f "$ENV_PATH" ]; then
         echo "✓ API key configured"
     fi
 else
-    echo "⚠️  No .env file found"
+    echo "⚠️  No .env file found at $ENV_PATH (set by automation/paths.yaml)"
     if [ "$CLI_MODE" = false ]; then
-        echo "  To enable LLM features:"
-        echo "  1. Copy .env.example to ../../docker/.env"
-        echo "  2. Add your Anthropic API key"
+        echo "  To enable LLM features, create it from .env.example and add your Anthropic API key."
         echo ""
         echo "  Create .env now? (y/n)"
         read -r response
         if [[ "$response" =~ ^[Yy]$ ]]; then
-            mkdir -p "../../docker"
+            mkdir -p "$(dirname "$ENV_PATH")"
             cp .env.example "$ENV_PATH"
             echo "✓ Created $ENV_PATH"
             echo "  Please edit it to add your API key"
         fi
     else
-        # In CLI mode, create .env silently if .env.example exists
-        if [ -f ".env.example" ]; then
-            mkdir -p "../../docker"
-            cp .env.example "$ENV_PATH"
-            echo "  (Created $ENV_PATH from template - edit to add API key)"
-        fi
+        echo "  (Create it from .env.example to enable LLM features)"
     fi
 fi
 

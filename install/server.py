@@ -796,11 +796,25 @@ class LLMIntegration:
     def __init__(self):
         self.api_key = self.load_api_key()
     
-    def load_api_key(self):
-        """Load API key from .env file two levels up"""
-        env_path = Path(__file__).parent.parent.parent / "docker" / ".env"
+    @staticmethod
+    def resolve_env_path():
+        """Return the .env path named by env_file in webroot's automation/paths.yaml, or None"""
+        automation_dir = Path(__file__).resolve().parent.parent.parent / "automation"
+        try:
+            text = (automation_dir / "paths.yaml").read_text()
+        except OSError:
+            return None
+        match = re.search(r"^\s*env_file:\s*(.+)$", text, re.MULTILINE)
+        if not match:
+            return None
+        value = re.sub(r"\s+#.*$", "", match.group(1)).strip().strip('"\'')
+        return (automation_dir / value).resolve() if value else None
 
-        if not env_path.exists():
+    def load_api_key(self):
+        """Load API key from the .env file set by env_file in automation/paths.yaml"""
+        env_path = self.resolve_env_path()
+
+        if not env_path or not env_path.exists():
             return None
 
         try:
@@ -824,7 +838,7 @@ class LLMIntegration:
         if not self.api_key:
             return {
                 'success': False,
-                'error': 'No API key found in ../../docker/.env'
+                'error': 'No ANTHROPIC_API_KEY found in the env_file set in automation/paths.yaml'
             }
         
         try:

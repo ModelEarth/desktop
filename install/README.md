@@ -85,15 +85,16 @@ libreoffice # Office Suite
 If you want AI-powered modifications:
 
 1. Get an Anthropic API key from https://console.anthropic.com/
-2. Create `.env` file at `../../docker/.env`:
+2. Point `automation/paths.yaml` at a `.env` file in a folder outside your webroot:
 
 ```bash
 # From the desktop/install directory
-mkdir -p ../../docker
-cp .env.example ../../docker/.env
+cp ../../automation/paths.example.yaml ../../automation/paths.yaml
+# Edit env_file in ../../automation/paths.yaml (relative to the automation folder),
+# e.g. env_file: ../../yourfolder/yourconfig.env
 ```
 
-3. Edit `../../docker/.env` and add your key:
+3. Create that `.env` file from `.env.example` and add your key:
 
 ```
 ANTHROPIC_API_KEY=sk-ant-your-actual-key-here
@@ -228,7 +229,7 @@ desktop/install/
 ├── quickstart.sh          # Interactive setup wizard (optional, executable)
 │
 └── (External dependency)
-    └── ../../docker/.env  # Environment variables (API keys) - optional
+    └── ../../automation/paths.yaml  # env_file: path to your .env (API keys) - optional
 ```
 
 ### Core Files
@@ -450,7 +451,7 @@ sudo dnf install flatpak      # Fedora
 
 ### LLM Not Available
 
-1. Check that `.env` file exists at `../../docker/.env`
+1. Check that `env_file` in `../../automation/paths.yaml` points to an existing `.env` file
 2. Verify API key is correct
 3. Install anthropic package:
    ```bash
@@ -548,7 +549,7 @@ self.cache_ttl = 60  # Cache for 60 seconds instead of 30
 
 ### API Key Security
 - Never commit `.env` file to version control
-- Add `../../docker/.env` to `.gitignore`
+- Keep the `.env` file outside your webroot (its path is set in `automation/paths.yaml`, which is gitignored)
 - Keep API key private
 - Rotate keys periodically
 
