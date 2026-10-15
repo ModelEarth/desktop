@@ -878,7 +878,14 @@ class APIHandler(SimpleHTTPRequestHandler):
     
     package_manager = None
     llm = None
-    
+
+    def end_headers(self):
+        # Local development: browsers check for a newer copy of each file on every load, rather than
+        # reusing a cached one, so edits show on reload (including scripts that pages load dynamically).
+        # Unchanged files still return a quick 304 Not Modified.
+        self.send_header('Cache-Control', 'no-cache')
+        super().end_headers()
+
     def do_GET(self):
         """Handle GET requests"""
         parsed_path = urlparse(self.path)
