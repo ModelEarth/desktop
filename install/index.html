@@ -4,43 +4,64 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Desktop Production Suite Installer</title>
+    <link type="text/css" rel="stylesheet" href="/localsite/css/base.css" id="/localsite/css/base.css" />
+    <script type="text/javascript" src="/localsite/js/localsite.js?showheader=true"></script>
+    <link rel="stylesheet" href="../css/craft.css">
+    <script src="../js/craft-apps.js"></script>
     <style>
-        * {
+        :where(.app-container, .modal-overlay, .mobile-nav),
+        :where(.app-container, .modal-overlay, .mobile-nav) * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+        .craft :is(h1, h2, h3, h4, h5, h6, p, ul, ol) {
+            margin: 0;
+            padding: 0;
+        }
         
-        :root {
-            --bg-primary: #ffffff;
-            --bg-secondary: #f7f7f8;
-            --bg-tertiary: #f0f0f1;
-            --text-primary: #1f1f1f;
-            --text-secondary: #676767;
-            --text-tertiary: #9b9b9b;
-            --border: #e5e5e6;
-            --accent: #c17836;
-            --accent-hover: #a96830;
+        /* Installer colors follow the StudioCraft tokens in craft.css, which switch with localsite's dark mode */
+        .craft {
+            --bg-primary: var(--craft-raised);
+            --bg-secondary: var(--craft-bg);
+            --bg-tertiary: var(--craft-sunken);
+            --text-primary: var(--craft-ink);
+            --text-secondary: var(--craft-muted);
+            --text-tertiary: var(--craft-faint);
+            --border: var(--craft-line);
+            --accent: var(--craft-accent);
+            --accent-hover: var(--craft-accent-ink);
             --success: #20a862;
             --warning: #f59e0b;
             --error: #e74c3c;
             --shadow: rgba(0, 0, 0, 0.05);
+            --activity-bg: color-mix(in srgb, var(--craft-accent) 12%, transparent);
+            --warn-ink: #92400e;
+            --warn-text: #78350f;
+            --warn-code: #fffbeb;
+        }
+        .dark .inst-sidebar, .dark .main-header {
+            background: var(--bg-secondary);
+        }
+        .dark .craft, .dark.craft {
+            --bg-secondary: #333;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --warn-ink: #fbbf24;
+            --warn-text: #fcd34d;
+            --warn-code: rgba(0, 0, 0, 0.35);
         }
         
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+        .app-container {
+            position: relative;
+            display: flex;
+            height: calc(100vh - var(--installer-top, 0px));
             background: var(--bg-secondary);
             color: var(--text-primary);
             line-height: 1.5;
         }
         
-        .app-container {
-            display: flex;
-            height: 100vh;
-        }
-        
         /* Left Navigation */
-        .sidebar {
+        .inst-sidebar {
             width: 260px;
             background: var(--bg-primary);
             border-right: 1px solid var(--border);
@@ -93,7 +114,7 @@
         
         .package-item {
             padding: 10px 12px;
-            border-radius: 6px;
+            border-radius: var(--craft-radius-sm);
             margin-bottom: 2px;
             cursor: pointer;
             transition: background 0.15s;
@@ -194,7 +215,7 @@
         }
         
         /* Main Content */
-        .main-content {
+        .inst-main {
             flex: 1;
             display: flex;
             flex-direction: column;
@@ -208,10 +229,15 @@
         }
         
         .main-header h2 {
-            font-size: 20px;
-            font-weight: 600;
+            font-family: var(--craft-display);
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
             color: var(--text-primary);
-            margin-bottom: 12px;
+            margin-bottom: 0;
+            padding: 0;
+            border: none;
+            opacity: 1;
         }
         
         .action-bar {
@@ -222,8 +248,8 @@
         
         button {
             padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
+            border: 1px solid transparent;
+            border-radius: var(--craft-radius-sm);
             font-size: 13px;
             font-weight: 500;
             cursor: pointer;
@@ -245,32 +271,37 @@
             transform: none !important;
         }
         
-        .btn-primary {
+        :is(.app-container, .modal-overlay).craft .btn-primary {
             background: var(--accent);
-            color: white;
+            border-color: var(--accent);
+            color: #fff;
         }
         
-        .btn-primary:hover {
+        :is(.app-container, .modal-overlay).craft .btn-primary:hover {
             background: var(--accent-hover);
+            border-color: var(--accent-hover);
         }
         
-        .btn-secondary {
-            background: var(--bg-tertiary);
+        :is(.app-container, .modal-overlay).craft .btn-secondary {
+            background: transparent;
             color: var(--text-primary);
-            border: 1px solid var(--border);
+            border: 1px solid var(--craft-line-strong);
         }
         
-        .btn-secondary:hover {
-            background: var(--border);
+        :is(.app-container, .modal-overlay).craft .btn-secondary:hover {
+            background: var(--bg-primary);
+            border-color: var(--text-primary);
         }
         
-        .btn-success {
+        :is(.app-container, .modal-overlay).craft .btn-success {
             background: var(--success);
-            color: white;
+            border-color: var(--success);
+            color: #fff;
         }
         
-        .btn-success:hover {
+        :is(.app-container, .modal-overlay).craft .btn-success:hover {
             background: #1a8c52;
+            border-color: #1a8c52;
         }
         
         .btn-small {
@@ -284,17 +315,19 @@
             padding: 24px 32px;
         }
         
-        .card {
+        .inst-card {
             background: var(--bg-primary);
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: var(--craft-radius);
             padding: 24px;
             margin-bottom: 20px;
         }
         
-        .card h3 {
-            font-size: 16px;
-            font-weight: 600;
+        .inst-card h3 {
+            font-family: var(--craft-display);
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
             color: var(--text-primary);
             margin-bottom: 16px;
         }
@@ -352,12 +385,12 @@
         }
         
         /* LLM Panel */
-        .llm-textarea {
+        .craft .llm-textarea {
             width: 100%;
             min-height: 120px;
             padding: 12px;
             border: 1px solid var(--border);
-            border-radius: 6px;
+            border-radius: var(--craft-radius-sm);
             font-family: inherit;
             font-size: 13px;
             resize: vertical;
@@ -401,7 +434,7 @@
         .vibe-example {
             background: var(--bg-secondary);
             padding: 10px 12px;
-            border-radius: 6px;
+            border-radius: var(--craft-radius-sm);
             margin-bottom: 8px;
             font-size: 12px;
             cursor: pointer;
@@ -418,7 +451,7 @@
             background: var(--bg-secondary);
             border: 1px solid var(--border);
             padding: 16px;
-            border-radius: 6px;
+            border-radius: var(--craft-radius-sm);
             margin-top: 16px;
         }
         
@@ -448,7 +481,7 @@
         .ai-provider-select {
             padding: 8px 12px;
             border: 1px solid var(--border);
-            border-radius: 6px;
+            border-radius: var(--craft-radius-sm);
             font-size: 13px;
             font-weight: 500;
             background: var(--bg-primary);
@@ -497,7 +530,7 @@
         
         .progress-compact.has-activity {
             border-color: var(--accent);
-            background: #fef3e7;
+            background: var(--activity-bg);
             color: var(--accent);
         }
         
@@ -508,9 +541,9 @@
             margin-top: 8px;
             background: var(--bg-primary);
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: var(--craft-radius-sm);
             padding: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px var(--shadow);
             min-width: 300px;
             max-width: 400px;
             z-index: 100;
@@ -612,15 +645,16 @@
         .modal-content {
             background: var(--bg-primary);
             padding: 32px;
-            border-radius: 12px;
+            border-radius: var(--craft-radius);
             max-width: 480px;
             width: 90%;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
         }
         
         .modal-content h3 {
-            font-size: 18px;
-            font-weight: 600;
+            font-family: var(--craft-display);
+            font-size: 20px;
+            font-weight: 700;
             margin-bottom: 12px;
             color: var(--text-primary);
         }
@@ -643,45 +677,44 @@
         }
         
         /* Server Offline Alert */
-        .alert {
-            background: #fef3c7;
-            border: 1px solid #fbbf24;
+        .inst-alert {
             padding: 20px;
-            border-radius: 8px;
+            border-radius: var(--craft-radius);
             margin-bottom: 20px;
         }
         
-        .alert h3 {
+        .inst-alert h3 {
             font-size: 15px;
-            color: #92400e;
+            color: var(--warn-ink);
             margin-bottom: 10px;
             font-weight: 600;
         }
         
-        .alert p {
+        .inst-alert p {
             font-size: 13px;
-            color: #78350f;
+            color: var(--warn-text);
             margin-bottom: 12px;
         }
         
-        .alert code {
-            background: #fffbeb;
+        .inst-alert code {
+            background: var(--warn-code);
+            overflow: auto;
             padding: 10px 14px;
-            border-radius: 6px;
+            border-radius: var(--craft-radius-sm);
             display: block;
             margin: 8px 0;
             font-family: monospace;
             font-size: 12px;
-            color: #92400e;
+            color: var(--warn-ink);
         }
         
-        .alert a {
+        .inst-alert a {
             color: var(--accent);
             text-decoration: underline;
             font-weight: 500;
         }
         
-        .alert a:hover {
+        .inst-alert a:hover {
             color: var(--accent-hover);
         }
         
@@ -729,7 +762,7 @@
                 padding-bottom: 56px;
             }
 
-            .sidebar {
+            .inst-sidebar {
                 width: 100%;
                 height: 100%;
                 display: none;
@@ -742,27 +775,27 @@
                 z-index: 10;
             }
 
-            .sidebar.mobile-active {
+            .inst-sidebar.mobile-active {
                 display: flex;
             }
 
-            .main-content {
+            .inst-main {
                 display: none;
             }
 
-            .main-content.mobile-active {
+            .inst-main.mobile-active {
                 display: flex;
             }
 
-            .main-content.action-only .content-area {
+            .inst-main.action-only .content-area {
                 display: none;
             }
 
-            .main-content.action-only .action-bar {
+            .inst-main.action-only .action-bar {
                 flex-direction: column;
             }
 
-            .main-content.action-only .action-bar button {
+            .inst-main.action-only .action-bar button {
                 width: 100%;
             }
 
@@ -825,22 +858,22 @@
         }
 
         @media (min-width: 769px) {
-            .sidebar {
+            .inst-sidebar {
                 display: flex !important;
                 width: 220px;
                 position: static;
             }
 
-            .main-content {
+            .inst-main {
                 display: flex !important;
             }
         }
     </style>
 </head>
 <body>
-    <div class="app-container">
+    <div class="app-container craft">
         <!-- Left Sidebar -->
-        <div class="sidebar" id="sidebarPanel">
+        <div class="inst-sidebar" id="sidebarPanel">
             <div class="sidebar-header">
                 <div class="server-info">
                     <span class="status-dot" id="serverStatusDot"></span>
@@ -865,10 +898,13 @@
         </div>
         
         <!-- Main Content -->
-        <div class="main-content" id="mainPanel">
+        <div class="inst-main" id="mainPanel">
             <div class="main-header">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <h2 style="margin-bottom: 0; font-size: 15px; font-weight: 600;">Desktop Apps</h2>
+                    <div>
+                        <div class="craft-eyebrow"><b>StudioCraft</b> / Desktop Installer</div>
+                        <h2>Desktop Apps</h2>
+                    </div>
                     <div class="progress-indicator">
                         <div class="progress-compact" id="progressCompact" onclick="toggleProgress()">
                             <span id="progressText">Production Suite</span>
@@ -896,18 +932,33 @@
             </div>
             
             <div class="content-area">
-                <div id="serverOffline" class="alert" style="display: none;">
-                    <h3>⚠️ Server Not Running</h3>
-                    <p>Please start the server to use this interface:</p>
+                <div id="serverOffline" class="inst-alert" style="display: none;">
+                    <h3>⚠️ Start your local server</h3>
+                    <p>Run on your local computer to use this interface:</p>
                     <div id="startCommands"></div>
                 </div>
                 
-                <div class="card" id="claudeDownloadCard">
+                <div class="inst-card" id="studioCraftCard">
+                    <div class="craft-eyebrow"><b>StudioCraft</b> / ArtCraft Launcher</div>
+                    <h3 style="margin: 6px 0 6px 0;">Open-Source Crafting Apps</h3>
+                    <p style="color: var(--craft-muted); margin-bottom: 16px; font-size: 14px;">The ArtCraft Launcher installs PhotoCraft, FilmCraft, WordCraft, GridCraft and every other Crafting App, and keeps each one up to date.</p>
+                    <div id="installCraftDock" class="craft-dock" style="margin-bottom: 16px;"></div>
+                    <div class="craft-actions" style="justify-content: flex-start; margin-bottom: 12px;">
+                        <a class="craft-btn craft-btn-primary" href="https://github.com/storytold/craft-launcher/releases/latest" target="_blank">
+                            <span id="craftOsLabel">Download Launcher</span>
+                        </a>
+                        <a class="craft-btn" href="../">StudioCraft Apps</a>
+                    </div>
+                    <div style="font-size: 12px; color: var(--craft-faint);">
+                        Apps and icons by <a href="https://getartcraft.com/apps" target="_blank" style="color: var(--craft-muted);">ArtCraft</a>, Apache-2.0
+                    </div>
+                </div>
+
+                <div class="inst-card" id="claudeDownloadCard">
                     <h3>Claude Desktop</h3>
                     <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px;">AI assistant for Mac, Windows, and Linux</p>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
-                        <a href="https://claude.ai/download" target="_blank" id="claudePrimaryDownload"
-                           style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--accent); color: #fff; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 500;">
+                        <a href="https://claude.ai/download" target="_blank" id="claudePrimaryDownload" class="craft-btn craft-btn-primary">
                             <span id="claudeOsLabel">Download Claude</span>
                         </a>
                     </div>
@@ -923,7 +974,7 @@
                     </div>
                 </div>
 
-                <div class="card">
+                <div class="inst-card">
                     <h3>Command Console</h3>
                     <div class="console">
                         <div class="console-header">TERMINAL</div>
@@ -946,7 +997,7 @@
                     </div>
                 </div>
                 
-                <div class="card">
+                <div class="inst-card">
                     <h3>AI Assistant</h3>
                     <textarea class="llm-textarea" id="llmPrompt" placeholder="Ask the AI to generate code modifications...
 
@@ -982,7 +1033,7 @@ Examples:
                     </div>
                 </div>
                 
-                <div class="card" style="background: var(--bg-secondary); border: none; padding: 16px;">
+                <div class="inst-card" style="background: var(--bg-secondary); border: none; padding: 16px;">
                     <div style="font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
                         <span style="font-size: 14px;">💤</span>
                         <span>Commented out in the desktop.conf file</span>
@@ -993,7 +1044,7 @@ Examples:
     </div>
 
     <!-- Mobile Bottom Nav -->
-    <nav class="mobile-nav">
+    <nav class="mobile-nav craft">
         <button class="mobile-nav-tab active" id="navApps" onclick="mobileNav('apps')">
             <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
             Apps
@@ -1009,7 +1060,7 @@ Examples:
     </nav>
 
     <!-- Update Modal -->
-    <div class="modal-overlay" id="updateModal">
+    <div class="modal-overlay craft" id="updateModal">
         <div class="modal-content">
             <h3>Update Selected Apps</h3>
             <p>Updates are available for some selected apps. How would you like to proceed?</p>
@@ -1022,14 +1073,14 @@ Examples:
     </div>
     
     <!-- Uninstall Modal -->
-    <div class="modal-overlay" id="uninstallModal">
+    <div class="modal-overlay craft" id="uninstallModal">
         <div class="modal-content">
             <h3>Uninstall Apps</h3>
             <p>The following apps will be uninstalled:</p>
-            <div id="uninstallList" style="background: var(--bg-secondary); padding: 12px; border-radius: 6px; margin: 12px 0; max-height: 200px; overflow-y: auto;">
+            <div id="uninstallList" style="background: var(--bg-secondary); padding: 12px; border-radius: var(--craft-radius-sm); margin: 12px 0; max-height: 200px; overflow-y: auto;">
             </div>
             <div style="display: flex; gap: 10px; margin-top: 24px;">
-                <button class="btn-primary" onclick="confirmUninstall()" style="background: var(--error); flex: 1;">Confirm Uninstall</button>
+                <button class="btn-primary" onclick="confirmUninstall()" style="background: var(--error); border-color: var(--error); flex: 1;">Confirm Uninstall</button>
                 <button class="btn-secondary" onclick="closeUninstallModal()" style="flex: 1;">Cancel</button>
             </div>
         </div>
@@ -1171,6 +1222,32 @@ Examples:
                 label.textContent = 'Download for Linux';
             } else {
                 label.textContent = 'Download Claude';
+            }
+        })();
+
+        // Fit the app between the localsite header and the bottom of the window
+        function fitInstallerHeight() {
+            const app = document.querySelector('.app-container');
+            if (!app) return;
+            app.style.setProperty('--installer-top', (app.getBoundingClientRect().top + window.scrollY) + 'px');
+        }
+        window.addEventListener('resize', fitInstallerHeight);
+        // localsite adds its header after this script runs, so re-measure while the page settles
+        const fitInstallerTimer = setInterval(fitInstallerHeight, 250);
+        setTimeout(() => clearInterval(fitInstallerTimer), 6000);
+
+        // StudioCraft card: Crafting App icons and the launcher label for this OS
+        (function initStudioCraftCard() {
+            renderCraftDock(document.getElementById('installCraftDock'), '../img/craft/');
+            const ua = navigator.userAgent.toLowerCase();
+            const label = document.getElementById('craftOsLabel');
+            if (!label) return;
+            if (ua.includes('mac') || ua.includes('darwin')) {
+                label.textContent = 'Launcher for Mac';
+            } else if (ua.includes('win')) {
+                label.textContent = 'Launcher for Windows';
+            } else if (ua.includes('linux')) {
+                label.textContent = 'Launcher for Linux';
             }
         })();
 
@@ -1400,7 +1477,7 @@ Examples:
                 `;
             } else {
                 // On localhost - show activation commands
-                offlineDiv.querySelector('h3').textContent = '⚠️ Activate your server';
+                offlineDiv.querySelector('h3').textContent = '⚠️ Start your local server';
                 
                 const userAgent = navigator.userAgent.toLowerCase();
                 let commands = '';
@@ -1470,6 +1547,23 @@ Examples:
                             </div>
                             <div class="package-status">
                                 <span class="status-icon" title="Download from claude.ai">↓</span>
+                            </div>
+                        </div>
+                    </a>
+                `;
+            }
+
+            // StudioCraft: the ArtCraft Launcher installs the Crafting Apps from its GitHub releases
+            if (pkg.name === 'artcraft-launcher') {
+                return `
+                    <a href="${craftLinks.launcher}" target="_blank" style="text-decoration: none; color: inherit;">
+                        <div class="package-item" style="border-left: 3px solid #2d81ff;">
+                            <div class="package-info">
+                                <div class="package-name">StudioCraft</div>
+                                <div class="package-description">ArtCraft Launcher for the Crafting Apps</div>
+                            </div>
+                            <div class="package-status">
+                                <span class="status-icon" title="Download from GitHub">↓</span>
                             </div>
                         </div>
                     </a>

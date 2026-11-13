@@ -79,6 +79,7 @@ libreoffice # Office Suite
 - Lines starting with `#` are disabled packages  
 - Remove the `#` to enable a package
 - Add inline descriptions after the package name with `#`
+- `claude` and `artcraft-launcher` are download links rather than package-manager installs. `artcraft-launcher` is the StudioCraft entry: the [ArtCraft Launcher](https://github.com/storytold/craft-launcher/releases/latest) installs and updates the open-source Crafting Apps (PhotoCraft, FilmCraft, WordCraft, GridCraft and more).
 
 ### 3. Configure LLM (Optional)
 

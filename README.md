@@ -1,4 +1,4 @@
-# Integrations
+# Flexible Integrations
 
 [OpenDesktop Storage](https://www.opendesktop.org) &ndash; LibreOffice cloud services
 
@@ -11,5 +11,3 @@
 3. Hire locally with streamlined processes
 4. Skip property tax breaks
 5. Provide free AI training to schools and small businesses
-
-**Getting Started** &ndash; Install the [Webroot Manager](../team/setup/) and run the [Desktop Installer](install)

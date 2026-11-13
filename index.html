@@ -7,12 +7,16 @@
 
 <link rel='stylesheet' href='https://dreamstudio.com/dreamstudio/css/dreamstudio.css'>
 
-<meta name="keywords" content="Creative Suite, software install scripts, open source, software, free, Open Desktop, Adobe Creative Cloud, LibreOffice, Microsoft Office, GIMP, Blender, InkScape, Lightworks, Professional, Education">
+<meta name="keywords" content="StudioCraft, ArtCraft, Crafting Apps, Creative Suite, software install scripts, open source, software, free, Open Desktop, Adobe Creative Cloud, LibreOffice, Microsoft Office, GIMP, Blender, InkScape, Lightworks, Professional, Education">
+<meta name="description" content="StudioCraft - DreamStudio Desktop portal to open-source creative apps, with an installer for Macs and PCs.">
 
-<title>Desktop Suite</title>
+<title>StudioCraft</title>
 
 <link type="text/css" rel="stylesheet" href="/localsite/css/base.css" id="/localsite/css/base.css" />
 <script type="text/javascript" src="/localsite/js/localsite.js?showheader=true"></script>
+
+<link type="text/css" rel="stylesheet" href="css/craft.css" />
+<script type="text/javascript" src="js/craft-apps.js"></script>
 
 <style>
 	.navlink-desktop {
@@ -25,210 +29,200 @@
 	a {
 		text-decoration: none !important;
 	}
-	h3 {
-	  letter-spacing: 5px;
-	  text-transform: uppercase;
-	  font: 20px "Lato", sans-serif;
-	  line-height: 32px;
-	  color: #111;
-	  color:#777;
-	}
-
-	.suiteTitle {
-		text-align:center;
-	}
-	.suiteTitle {
-		text-alignX:left;
-		font-weight: 200;
-		font-size: 28px;
-	}
-	#desktopTopIcons {
-		text-align: center;
-		margin-top: 10px;
-		container-type: inline-size;
-	}
-	#desktopTopIcons img {
-		--top-icon-scale: 1;
-		height: auto;
-	}
-	#desktopTopIcons img:nth-child(1) {
-		width: calc(128px * var(--top-icon-scale));
-	}
-	#desktopTopIcons img:nth-child(2) {
-		width: calc(140px * var(--top-icon-scale));
-		margin: calc(17px * var(--top-icon-scale)) calc(4px * var(--top-icon-scale)) 0 calc(7px * var(--top-icon-scale));
-	}
-	#desktopTopIcons img:nth-child(3) {
-		width: calc(128px * var(--top-icon-scale));
-	}
-	@container (max-width: 430px) {
-		#desktopTopIcons img {
-			--top-icon-scale: 0.406667;
-		}
-	}
 	#desktopPageWrap {
-		padding-bottom: 30px;
-		container-type: inline-size;
+		padding-bottom: 0;
 	}
-	#desktopSuiteContent {
-		text-align: center;
-	}
-	.desktopPanelCard {
-		margin: 0 auto;
-		max-width: calc(100% - 40px);
-		border: 1px solid #ddd;
-		padding: 20px 22px 0 25px;
-		border-radius: 18px;
-	}
-	#appListHolder {
-		display: table;
-		text-align: left;
-	}
-	#readmeHolder {
-		max-width: min(620px, calc(100% - 40px));
-		margin-left: auto;
-		margin-right: auto;
-	}
-	@container (max-width: 580px) {
-		.desktopPanelCard {
-			border: none;
-			padding: 0;
-		}
-	}
-	@media (max-width: 600px) {
-		
-		.newLineMobile {
-			display: block;
-		}
+	.desktopSuiteIcon {
+		background: #fff;
+		object-fit: contain;
+		padding: 3px;
 	}
 </style>
 
 <script>
 loadMarkdown("README.md", "readmeDiv", "_parent");
-//loadMarkdown("MacOS/setup.sh", "macDiv", "_parent");
 </script>
 
 </head>
 
 <body>
 
-<div id="desktopTopIcons">
-	<img src="https://dreamstudio.com/img/apps/gimp_99062.png">
-	<img src="https://dreamstudio.com/img/apps/blender.png">
-	<img src="https://dreamstudio.com/img/apps/inkscape.png">
-</div>
+<div id="desktopPageWrap" class="lite craft">
 
-<div id="desktopPageWrap" class="lite">
-<br>
-<!-- Desktop Production Suite -->
-<h3 class="suiteTitle">Desktop Suite</h3>
-
-<div id="desktopSuiteContent">
-
-	<div style="margin-bottom: 10px;">
-		Collaborative tools for art, science,&nbsp;and&nbsp;industry. 
-		<span class="newLineMobile" style="margin-bottom:10px">Organize&nbsp;your&nbsp;world!</span>
-	</div>
-
-	<span class="showdesktop" style="display:none">
-	Our installer provides an easy way for schools and offices to update Macs and PCs.<br><br>
-	</span>
-
-		<div id="appListHolder" class="lite content-color desktopPanelCard">
-			<div style="float:left;margin:0 30px 20px 0">
-
-
-				<a href="https://www.libreoffice.org/">LibreOffice</a> - Compatible with Microsoft Office<br>
-
-				<a href="https://www.capcut.com/tools/desktop-video-editor">CapCut Desktop</a> - Free Video Editor<br>
-
-				<a href="https://www.lwks.com/">Lightworks</a> - Professional non-linear video editor<br>
-				<!-- Pro version required for HD output. Most computers come with a video editor. -->
-
-				<a href="https://www.scribus.net/">Scribus</a> - Desktop publishing similar to InDesign<br>
-				
-
-				<!--
-				* <a href="https://www.freecadweb.org/">FreeCAD</a> - Parametric modeler for designing printable 3D objects.<br>
-
-				* All the Top Open Source Creative Design Apps<br>
-
-				Could add: VS Code.  Sublime Text (is not free at $80 for 3 years individual)
-
-				To add, as un-checked option:
-				QGIS - Alternative to ArcGIS for map making - Consumes all types of data!
-
-				-->
-				
-				
-				<!--
-				* Cinelarra, Avid Video Editor Alternative<br>
-				* Drum Machines, Synthesizers, Audio Mastering<br>
-				-->
-
-				<!-- 
-					Ardour is not pitched as free.
-					https://community.ardour.org/download_form 
-				-->
-				<!--
-				* <a href="https://ardour.org/">Ardour Multitrack Audio Recorder</a> - free alternative to ProTools<br>
-				-->
-
-			</div>
-
-
-			<div style="float:left; margin-bottom:20px">
-
-				<a href="https://dreamstudio.com/swarm/">Swarm</a> - AI Image Generation<br>
-				<a href="https://www.blender.org/">Blender</a> - 3D Graphics & Animation<br>
-				<a href="https://inkscape.org/">Inkscape</a> - Similar to Illustrator<br>
-				<a href="https://www.gimp.org/">GIMP</a> - Similar to PhotoShop<br>
-				
-			</div>
-
+	<!-- StudioCraft hero -->
+	<div class="craft-section craft-hero">
+		<div class="craft-eyebrow"><b>DreamStudio Desktop</b> / StudioCraft</div>
+		<h1 class="craft-title">Create in the open.<br><span class="craft-title-bright">Studio</span><em>Craft</em></h1>
+		<div class="craft-lede">
+			StudioCraft is our portal to the open-source Crafting Apps from ArtCraft: <span style="white-space: nowrap;">Native tools for images</span>, vectors, video, audio, layout, CAD and spreadsheets.
 		</div>
 
-  </div>
+		<div id="craftDock" class="craft-dock"></div>
 
+		<div class="craft-actions">
+			<a class="craft-btn craft-btn-primary" href="install/">Desktop Installer</a>
+			<a class="craft-btn" href="https://github.com/storytold/craft-launcher/releases/latest">ArtCraft Launcher</a>
+			<a class="craft-btn" href="https://github.com/storytold">Browse on GitHub</a>
+		</div>
 
-	<div style="text-align:center">
-		
 		<span class="showdesktop" style="display:none">
 			<br>
-			If you also work with Adobe InDesign, save your files as IDML.<br>
+			Our installer provides an easy way for schools and offices to update Macs and PCs.
+		</span>
+	</div>
+
+	<!-- Crafting Apps -->
+	<div class="craft-section">
+		<div class="craft-eyebrow"><b>01</b> / The lineup</div>
+		<h2 class="craft-section-title">Free Crafting Apps</h2>
+		<div class="craft-lede" style="max-width: none;">
+			The ArtCraft Launcher installs the apps below and keeps each one up to date. <span style="white-space: nowrap;">Pick a craft to explore</span> its screenshots, downloads and source. Engineered with Claude Code
+		</div>
+		<div id="craftChips" class="craft-chips"></div>
+		<div id="craftGrid" class="craft-grid"></div>
+	</div>
+
+	<!-- Desktop Suite -->
+	<div class="craft-section">
+		<div class="craft-eyebrow"><b>02</b> / Desktop Suite</div>
+		<h2 class="craft-section-title">Creativity Tools for Art, Science and&nbsp;Industry</h2>
+		<div class="craft-lede" style="margin-bottom:22px">
+			Proven open-source and free apps that our installer sets up alongside StudioCraft.
+		</div>
+
+		<div class="craft-list">
+			<a class="craft-row" href="https://www.libreoffice.org/" style="--app:#18a303">
+				<span class="craft-icon craft-icon-sm craft-icon-letter">L</span>
+				<div><div class="craft-row-name">LibreOffice</div><div class="craft-row-desc">Compatible with Microsoft Office</div></div>
+			</a>
+			<a class="craft-row" href="https://www.capcut.com/tools/desktop-video-editor" style="--app:#111">
+				<span class="craft-icon craft-icon-sm craft-icon-letter">C</span>
+				<div><div class="craft-row-name">CapCut Desktop</div><div class="craft-row-desc">Free video editor</div></div>
+			</a>
+			<a class="craft-row" href="https://www.lwks.com/" style="--app:#c8102e">
+				<span class="craft-icon craft-icon-sm craft-icon-letter">L</span>
+				<div><div class="craft-row-name">Lightworks</div><div class="craft-row-desc">Professional non-linear video editor</div></div>
+			</a>
+			<!-- Pro version required for HD output. Most computers come with a video editor. -->
+			<a class="craft-row" href="https://www.scribus.net/" style="--app:#2d5c88">
+				<span class="craft-icon craft-icon-sm craft-icon-letter">S</span>
+				<div><div class="craft-row-name">Scribus</div><div class="craft-row-desc">Desktop publishing similar to InDesign</div></div>
+			</a>
+			<a class="craft-row" href="https://dreamstudio.com/swarm/" style="--app:#8b5cf6">
+				<span class="craft-icon craft-icon-sm craft-icon-letter">S</span>
+				<div><div class="craft-row-name">Swarm</div><div class="craft-row-desc">AI image generation</div></div>
+			</a>
+			<a class="craft-row" href="https://www.blender.org/">
+				<img class="craft-icon craft-icon-sm desktopSuiteIcon" src="https://dreamstudio.com/img/apps/blender.png" alt="Blender icon">
+				<div><div class="craft-row-name">Blender</div><div class="craft-row-desc">3D graphics and animation</div></div>
+			</a>
+			<a class="craft-row" href="https://inkscape.org/">
+				<img class="craft-icon craft-icon-sm desktopSuiteIcon" src="https://dreamstudio.com/img/apps/inkscape.png" alt="Inkscape icon">
+				<div><div class="craft-row-name">Inkscape</div><div class="craft-row-desc">Similar to Illustrator</div></div>
+			</a>
+			<a class="craft-row" href="https://www.gimp.org/">
+				<img class="craft-icon craft-icon-sm desktopSuiteIcon" src="https://dreamstudio.com/img/apps/gimp_99062.png" alt="GIMP icon">
+				<div><div class="craft-row-name">GIMP</div><div class="craft-row-desc">Similar to Photoshop</div></div>
+			</a>
+			<!--
+			* <a href="https://www.freecadweb.org/">FreeCAD</a> - Parametric modeler for designing printable 3D objects.<br>
+
+			Could add: VS Code.  Sublime Text (is not free at $80 for 3 years individual)
+
+			To add, as un-checked option:
+			QGIS - Alternative to ArcGIS for map making - Consumes all types of data!
+
+			* Cinelarra, Avid Video Editor Alternative<br>
+			* Drum Machines, Synthesizers, Audio Mastering<br>
+
+			Ardour is not pitched as free.
+			https://community.ardour.org/download_form
+			* <a href="https://ardour.org/">Ardour Multitrack Audio Recorder</a> - free alternative to ProTools<br>
+			-->
+		</div>
+
+		<span class="showdesktop" style="display:none">
+			<br>
+			If you also work with Adobe InDesign, save your files as IDML.
 			IDML files can be opened with Scribus.<br>
 		</span>
 		<!--
 		Our installer includes Scribus 1.4.8, so you'll need to downloand Scribus 1.5 directly.
 		-->
-		<br>
 
-		<a class="smartButton btn-success" href="install/" style="margin-bottom:18px; font-size:16px; border-radius: 16px; padding:8px 16px 8px 16px; font-weight:100">Desktop Installer</a>
-
-		<a class="smartButton" href="https://github.com/modelearth/desktop/blob/main/install/desktop.conf" style="margin-bottom:18px; font-size:16px; border-radius: 16px; padding:8px 16px 8px 16px; font-weight:100">App Config</a>
-
-		<br>
-
+		<div class="craft-actions" style="margin-top:26px">
+			<a class="craft-btn craft-btn-primary" href="install/">Desktop Installer</a>
+			<a class="craft-btn" href="https://github.com/modelearth/desktop/blob/main/install/desktop.conf">App Config</a>
+		</div>
 	</div>
 
-	<br>
+	<!-- Principles -->
+	<div class="craft-section" style="padding-bottom: 16px;">
+		<div class="craft-eyebrow"><b>03</b> / How we work</div>
+		<h2 class="craft-section-title">Built to be shared</h2>
+		<div class="craft-principles" style="margin-top:20px">
+			<div class="craft-principle">
+				<span class="craft-principle-num">01</span>
+				<h4>Open source</h4>
+				<p>Every app here can be inspected, forked and improved, with no subscriptions.</p>
+			</div>
+			<div class="craft-principle">
+				<span class="craft-principle-num">02</span>
+				<h4>Native and fast</h4>
+				<p>Desktop apps that open instantly on Mac, Windows and Linux classroom machines.</p>
+			</div>
+			<div class="craft-principle">
+				<span class="craft-principle-num">03</span>
+				<h4>Familiar tools</h4>
+				<p>Layouts and shortcuts that match the commercial suites people already know.</p>
+			</div>
+			<div class="craft-principle">
+				<span class="craft-principle-num">04</span>
+				<h4>Your files stay local</h4>
+				<p>Work is saved on your own computer in open formats you control.</p>
+			</div>
+			<div class="craft-principle">
+				<span class="craft-principle-num">05</span>
+				<h4>Agent ready</h4>
+				<p>Our installer includes an AI assistant, so Claude and other agents can help set up and extend each machine.</p>
+			</div>
+			<div class="craft-principle">
+				<span class="craft-principle-num">06</span>
+				<h4>One installer</h4>
+				<p>Our Desktop Installer keeps schools and offices current from one app config.</p>
+			</div>
+		</div>
+	</div>
 
-	<style>
-		.content h1 {
-			font-size: 24px;
-		}
-		.content h3 {
-    	letter-spacing: 1px !important;
-    	font-size: 16px;
-  	}
-	</style>
-	<div id="readmeHolder" class="content contentpadding desktopPanelCard">
-	  <div id="readmeDiv"></div>
+	<!-- Integrations README -->
+	<div class="craft-section" style="border-top: none;">
+		<div class="craft-eyebrow"><b>04</b> / Connect</div>
+		<div id="readmeHolder" class="craft-prose">
+			<div id="readmeDiv"></div>
+			<div class="code" id="macDiv"></div>
+			<p>Crafting Apps and icons by <a href="https://getartcraft.com/apps">ArtCraft</a>, open source under the <a href="https://github.com/storytold">Apache-2.0 license</a>.</p>
+		</div>
+	</div>
 
-	  <div class="code" id="macDiv"></div>
+	<div id="craftStage" class="craft-stage">
+		<div class="craft-stage-bg" style="background-image: url(img/studio-desk.jpg);"></div>
+		<div class="craft-stage-shade"></div>
+		<div class="craft-nucleus">
+			Studio<em>Craft</em>
+			<div class="craft-nucleus-sub">Built in Rust by ArtCraft collaborators.</div>
+			<div class="craft-nucleus-sub">Organize your world for free!!!</div>
+		</div>
+		<a class="craft-stage-credit" href="https://unsplash.com/photos/9856jObeogs">Photo: Zachary Nelson / Unsplash</a>
 	</div>
 
 </div>
+
+<script>
+renderCraftDock(document.getElementById("craftDock"), "img/craft/");
+renderCraftGrid(document.getElementById("craftGrid"), "img/craft/");
+renderCraftChips(document.getElementById("craftChips"), document.getElementById("craftGrid"), "img/craft/");
+renderCraftOrbits(document.getElementById("craftStage"), "img/craft/");
+</script>
 
 </body>
 </html>
