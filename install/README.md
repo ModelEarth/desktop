@@ -156,6 +156,18 @@ Navigate to `http://localhost:8887` in your web browser.
 2. Click "Install Selected" in the main panel
 3. Follow any permission prompts (sudo/admin)
 
+### Installing and Updating CloudRoot
+
+With Git on your PATH, select CloudRoot and click **Install Selected** in the
+web installer. In the standard `desktop/install` layout, the installer puts
+`cloudroot` next to `desktop`. If the installer runs outside an `install`
+directory, it uses `~/Applications/GitHub/cloudroot`.
+
+To update or retry CloudRoot, select it and click **Install Selected** again.
+The installer pulls the existing checkout, then syncs submodule URLs and checks
+out the commits recorded by CloudRoot, including nested submodules. Use the web
+installer for GitHub apps. The standalone `setup.sh` skips GitHub entries.
+
 ### Updating Packages
 
 1. Click "Update Packages"
