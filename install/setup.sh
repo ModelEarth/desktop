@@ -111,6 +111,8 @@ read_packages() {
         [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
         # Trim whitespace
         line=$(echo "$line" | xargs)
+        # GitHub apps are handled by the web installer.
+        [[ "$line" == github:* ]] && continue
         packages+=("$line")
     done < "$PACKAGES_FILE"
     echo "${packages[@]}"

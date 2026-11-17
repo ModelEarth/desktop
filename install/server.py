@@ -19,6 +19,7 @@ import socket
 
 VERSION = "1.0.0"
 DEFAULT_PORT = 8887
+CLOUDROOT_REPO = "ModelEarth/cloudroot"
 
 class PackageManager:
     """Handles package detection and management across platforms"""
@@ -336,6 +337,9 @@ class PackageManager:
                         install_dir = apps_dir / repo_name
                         is_installed = install_dir.exists()
                     
+                    if is_installed and repo == CLOUDROOT_REPO:
+                        is_installed = self.cloudroot_is_installed(install_dir)
+
                     status = {
                         'name': pkg_name,
                         'description': pkg_info.get('description', ''),
@@ -493,6 +497,21 @@ class PackageManager:
         
         return (False, f"Package manager '{self.pkg_manager}' not supported for {package}")
     
+    def cloudroot_is_installed(self, install_dir):
+        """Check whether CloudRoot and its pinned submodules are present."""
+        if not (install_dir / ".git").exists():
+            return False
+        try:
+            result = subprocess.run(
+                ["git", "submodule", "status", "--recursive"],
+                cwd=install_dir, capture_output=True, text=True
+            )
+        except OSError:
+            return False
+        return result.returncode == 0 and all(
+            line.startswith(" ") for line in result.stdout.splitlines()
+        )
+
     def install_from_github(self, repo):
         """Install from GitHub repository (e.g., 'mcmonkeyprojects/SwarmUI') - returns (success, error_message)"""
         try:
@@ -538,6 +557,9 @@ class PackageManager:
                 warning = f"⚠️  Not running in webroot. Repo will be installed to {install_dir}. For web access, run the installer from a webroot (e.g., http://localhost:8000/desktop/install) so repos can be accessed at http://localhost:8000/{repo_name}"
                 print(warning)
             
+            if repo == CLOUDROOT_REPO and install_dir.exists() and not (install_dir / ".git").exists():
+                return (False, f"CloudRoot destination is not a Git checkout: {install_dir}")
+
             # Clone if not exists, pull if exists
             if install_dir.exists():
                 print(f"Updating {repo_name}...")
@@ -561,6 +583,17 @@ class PackageManager:
                     print(error)
                     return (False, error)
             
+            if repo == CLOUDROOT_REPO:
+                self.cache_time = 0
+                subprocess.run(
+                    ["git", "submodule", "sync", "--recursive"],
+                    cwd=install_dir, capture_output=True, text=True, check=True
+                )
+                subprocess.run(
+                    ["git", "submodule", "update", "--init", "--recursive", "--checkout"],
+                    cwd=install_dir, capture_output=True, text=True, check=True
+                )
+
             # Special handling for SwarmUI
             if repo_name == "SwarmUI":
                 print("Setting up SwarmUI...")
@@ -653,7 +686,6 @@ cd "{install_dir}"
                     
                     return (True, None)
             
-            # Generic GitHub repo install - just clone
             print(f"Successfully installed {repo_name} to {install_dir}")
             return (True, None)
             
