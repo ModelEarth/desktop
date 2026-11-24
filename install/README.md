@@ -80,6 +80,11 @@ libreoffice # Office Suite
 - Remove the `#` to enable a package
 - Add inline descriptions after the package name with `#`
 - `claude` and `artcraft-launcher` are download links rather than package-manager installs. `artcraft-launcher` is the StudioCraft entry: the [ArtCraft Launcher](https://github.com/storytold/craft-launcher/releases/latest) installs and updates the open-source Crafting Apps (PhotoCraft, FilmCraft, WordCraft, GridCraft and more).
+- The "Launcher for Mac/Windows/Linux" button links straight to the installer file for the visitor's OS, as the "Download for Mac" button on getartcraft.com/download does (a `.dmg` on Mac, `.msi` on Windows, Flatpak on Linux). The link is set in two steps:
+  1. On page load, from the last GitHub check saved in this browser, or else from `js/craft-launcher-release.js`, the release saved by `./install/refresh-launcher.sh`.
+  2. Then from the latest [craft-launcher release](https://github.com/storytold/craft-launcher/releases/latest) through the GitHub API, checked at most every 15 minutes and saved in the browser. If a check fails (GitHub can't be reached, or the limit of 60 API calls an hour per IP address is hit), the last successful check is kept, however old, until a check succeeds.
+
+  Run `./install/refresh-launcher.sh` after a launcher release and commit `js/craft-launcher-release.js`, so step 1 stays current.
 
 ### 3. Configure LLM (Optional)
 

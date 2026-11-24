@@ -7,6 +7,7 @@
     <link type="text/css" rel="stylesheet" href="/localsite/css/base.css" id="/localsite/css/base.css" />
     <script type="text/javascript" src="/localsite/js/localsite.js?showheader=true"></script>
     <link rel="stylesheet" href="/localsite/css/craft.css">
+    <script src="../js/craft-launcher-release.js"></script>
     <script src="../js/craft-apps.js"></script>
     <style>
         :where(.app-container, .modal-overlay, .mobile-nav),
@@ -944,8 +945,8 @@
                     <p style="color: var(--craft-muted); margin-bottom: 16px; font-size: 14px;">The ArtCraft Launcher installs PhotoCraft, FilmCraft, WordCraft, GridCraft and every other Crafting App, and keeps each one up to date.</p>
                     <div id="installCraftDock" class="craft-dock" style="margin-bottom: 16px;"></div>
                     <div class="craft-actions" style="justify-content: flex-start; margin-bottom: 12px;">
-                        <a class="craft-btn craft-btn-primary" href="https://github.com/storytold/craft-launcher/releases/latest" target="_blank">
-                            <span id="craftOsLabel">Download Launcher</span>
+                        <a class="craft-btn craft-btn-primary" href="https://github.com/storytold/craft-launcher/releases/latest" target="_blank" data-craft-launcher>
+                            <span id="craftOsLabel" data-craft-launcher-label>Download Launcher</span>
                         </a>
                         <a class="craft-btn" href="../">StudioCraft Apps</a>
                     </div>
@@ -1239,16 +1240,7 @@ Examples:
         // StudioCraft card: Crafting App icons and the launcher label for this OS
         (function initStudioCraftCard() {
             renderCraftDock(document.getElementById('installCraftDock'), '../img/craft/');
-            const ua = navigator.userAgent.toLowerCase();
-            const label = document.getElementById('craftOsLabel');
-            if (!label) return;
-            if (ua.includes('mac') || ua.includes('darwin')) {
-                label.textContent = 'Launcher for Mac';
-            } else if (ua.includes('win')) {
-                label.textContent = 'Launcher for Windows';
-            } else if (ua.includes('linux')) {
-                label.textContent = 'Launcher for Linux';
-            }
+            refreshCraftLauncherLinks();
         })();
 
         // Initialize - show apps from packages.conf immediately
@@ -1555,15 +1547,16 @@ Examples:
 
             // StudioCraft: the ArtCraft Launcher installs the Crafting Apps from its GitHub releases
             if (pkg.name === 'artcraft-launcher') {
+                const launcherDl = craftLauncherDownload();
                 return `
-                    <a href="${craftLinks.launcher}" target="_blank" style="text-decoration: none; color: inherit;">
+                    <a href="${launcherDl.href}"${launcherDl.direct ? '' : ' target="_blank"'} data-craft-launcher style="text-decoration: none; color: inherit;">
                         <div class="package-item" style="border-left: 3px solid #2d81ff;">
                             <div class="package-info">
                                 <div class="package-name">StudioCraft</div>
                                 <div class="package-description">ArtCraft Launcher for the Crafting Apps</div>
                             </div>
                             <div class="package-status">
-                                <span class="status-icon" title="Download from GitHub">↓</span>
+                                <span class="status-icon" title="Download the ArtCraft Launcher">↓</span>
                             </div>
                         </div>
                     </a>

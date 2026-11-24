@@ -29,6 +29,128 @@ var craftLinks = {
   github: "https://github.com/storytold"
 };
 
+// ArtCraft Launcher download for this visitor's OS, matching the "Download for Mac" logic on getartcraft.com/download:
+// detect the platform from the user agent, then link straight to that platform's recommended installer.
+// Release files come from, newest source first:
+//   1. The GitHub API's latest release, checked in the browser by refreshCraftLauncherLinks() every
+//      craftLauncherCacheMinutes, so links stay current when the script hasn't been run since a new launcher came out.
+//   2. The last successful GitHub check saved in this browser, kept for as long as later checks fail.
+//   3. js/craft-launcher-release.js, written by install/refresh-launcher.sh, for a browser that has never reached GitHub.
+var craftLauncherRepo = "storytold/craft-launcher";
+var craftLauncherLatest = null; // set from the GitHub API by refreshCraftLauncherLinks()
+var craftLauncherCacheKey = "craftLauncherLatest";
+var craftLauncherCacheMinutes = 15; // How often to check GitHub. It allows 60 unauthenticated API calls an hour per IP address.
+
+// Returns { platform, arch } for desktop systems, or null for phones, tablets, ChromeOS and unknown systems
+function craftLauncherPlatform() {
+  var ua = navigator.userAgent;
+  if (/Android|iPhone|iPad|iPod|Mobile|CrOS/i.test(ua)) return null;
+  if (/FreeBSD|GhostBSD/i.test(ua)) return { platform: "FreeBSD", arch: "x86_64" };
+  if (/Windows/i.test(ua)) return { platform: "Windows", arch: /ARM64|aarch64/i.test(ua) ? "arm64" : "x64" };
+  if (/Macintosh|Mac OS X/i.test(ua)) return navigator.maxTouchPoints > 1 ? null : { platform: "Mac" }; // iPads report as Macs
+  if (/Linux/i.test(ua)) return { platform: "Linux", arch: /riscv64/i.test(ua) ? "riscv64" : /aarch64|arm64|armv8/i.test(ua) ? "aarch64" : "x86_64" };
+  return null;
+}
+
+// Returns { href, label, direct, version }. direct is false when linking to the GitHub releases page instead of a file.
+function craftLauncherDownload() {
+  var p = craftLauncherPlatform();
+  if (!p) return { href: craftLinks.launcher, label: "Download Launcher", direct: false };
+  var label = "Launcher for " + p.platform;
+
+  // Recommended file first, then alternatives (riscv64 Linux has no Flatpak)
+  var suffixes = {
+    Mac: ["-macos-universal.dmg"],
+    Windows: ["-windows-" + p.arch + ".msi", "-windows-x64.msi"],
+    Linux: ["-linux-" + p.arch + ".flatpak", "-linux-" + p.arch + ".AppImage", "-linux-" + p.arch + ".deb"],
+    FreeBSD: ["-freebsd-" + p.arch + ".tar.gz"]
+  }[p.platform];
+
+  var rel = craftLauncherLatest || (typeof craftLauncherRelease !== "undefined" ? craftLauncherRelease : null);
+  if (rel && rel.assets) {
+    for (var i = 0; i < suffixes.length; i++) {
+      // Match the file name pattern rather than rel.version, in case a tag and its file names differ.
+      // The version must start with a digit, which skips artcraft-launcher-cli-* and artcraft-launcher-web-*.
+      var pattern = new RegExp("^artcraft-launcher-\\d[\\w.]*" + suffixes[i].replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$");
+      for (var j = 0; j < rel.assets.length; j++) {
+        if (pattern.test(rel.assets[j])) {
+          return { href: "https://github.com/" + rel.repo + "/releases/download/" + rel.tag + "/" + rel.assets[j], label: label, direct: true, version: rel.version };
+        }
+      }
+    }
+  }
+  return { href: craftLinks.launcher, label: label, direct: false };
+}
+
+// Point every [data-craft-launcher] link at this OS's launcher download, and set its label in [data-craft-launcher-label]
+function applyCraftLauncherLinks(root) {
+  var dl = craftLauncherDownload();
+  (root || document).querySelectorAll("[data-craft-launcher]").forEach(function(a) {
+    a.href = dl.href;
+    if (dl.direct) a.removeAttribute("target");
+    if (dl.version) a.title = "ArtCraft Launcher " + dl.version;
+    var label = a.querySelector("[data-craft-launcher-label]");
+    if (label) label.textContent = dl.label;
+  });
+  return dl;
+}
+
+// The last release fetched from GitHub in this browser, as { fetched, release }, or null
+function craftLauncherCached() {
+  try {
+    var cached = JSON.parse(localStorage.getItem(craftLauncherCacheKey));
+    return cached && cached.release && cached.release.assets ? cached : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+// Resolves to the latest launcher release { repo, tag, version, assets } from the GitHub API.
+// A copy saved in this browser is reused for craftLauncherCacheMinutes. After that GitHub is checked again,
+// and if the check fails, the saved copy is kept, however old, until a check succeeds.
+function fetchCraftLauncherLatest() {
+  var cached = craftLauncherCached();
+  if (cached && Date.now() - cached.fetched < craftLauncherCacheMinutes * 60000) {
+    return Promise.resolve(cached.release);
+  }
+  return fetch("https://api.github.com/repos/" + craftLauncherRepo + "/releases/latest", { headers: { Accept: "application/vnd.github+json" } })
+    .then(function(res) {
+      if (!res.ok) throw new Error("GitHub API " + res.status);
+      return res.json();
+    })
+    .then(function(json) {
+      var release = {
+        repo: craftLauncherRepo,
+        tag: json.tag_name,
+        version: String(json.tag_name).replace(/^v/, ""),
+        assets: (json.assets || []).map(function(a) { return a.name; })
+      };
+      if (!release.tag || !release.assets.length) throw new Error("GitHub API: no release files");
+      try { localStorage.setItem(craftLauncherCacheKey, JSON.stringify({ fetched: Date.now(), release: release })); } catch (e) {}
+      return release;
+    })
+    .catch(function(err) {
+      if (!cached) throw err;
+      console.warn("ArtCraft Launcher: GitHub check failed, keeping the " + cached.release.tag + " release found " + new Date(cached.fetched).toLocaleString() + " | " + err.message);
+      return cached.release;
+    });
+}
+
+// Set the launcher links now from the last GitHub check saved in this browser, or else from js/craft-launcher-release.js,
+// then update them from the latest GitHub release. If GitHub can't be reached or is rate limited, the links stay as they are.
+function refreshCraftLauncherLinks(root) {
+  var cached = craftLauncherCached();
+  if (cached) craftLauncherLatest = cached.release;
+  applyCraftLauncherLinks(root);
+  if (!window.fetch || !window.Promise) return;
+  fetchCraftLauncherLatest().then(function(release) {
+    craftLauncherLatest = release;
+    applyCraftLauncherLinks(root);
+  }).catch(function(err) {
+    console.warn("ArtCraft Launcher: GitHub check failed, using js/craft-launcher-release.js | " + err.message);
+  });
+}
+
 function craftIconHTML(app, iconBase, extraClass) {
   return '<img class="craft-icon ' + (extraClass || '') + '" src="' + iconBase + app.slug + '.webp" alt="' + app.name + ' icon" loading="lazy">';
 }

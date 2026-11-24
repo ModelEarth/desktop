@@ -16,6 +16,7 @@
 <script type="text/javascript" src="/localsite/js/localsite.js?showheader=true"></script>
 
 <link type="text/css" rel="stylesheet" href="/localsite/css/craft.css" />
+<script type="text/javascript" src="js/craft-launcher-release.js"></script>
 <script type="text/javascript" src="js/craft-apps.js"></script>
 
 <style>
@@ -61,7 +62,7 @@ loadMarkdown("README.md", "readmeDiv", "_parent");
 
 		<div class="craft-actions">
 			<a class="craft-btn craft-btn-primary" href="install/">Desktop Installer</a>
-			<a class="craft-btn" href="https://github.com/storytold/craft-launcher/releases/latest">ArtCraft Launcher</a>
+			<a class="craft-btn" href="https://github.com/storytold/craft-launcher/releases/latest" data-craft-launcher>ArtCraft Launcher</a>
 			<a class="craft-btn" href="https://github.com/storytold">Browse on GitHub</a>
 		</div>
 
@@ -219,6 +220,7 @@ loadMarkdown("README.md", "readmeDiv", "_parent");
 
 <script>
 renderCraftDock(document.getElementById("craftDock"), "img/craft/");
+refreshCraftLauncherLinks();
 renderCraftGrid(document.getElementById("craftGrid"), "img/craft/");
 renderCraftChips(document.getElementById("craftChips"), document.getElementById("craftGrid"), "img/craft/");
 renderCraftOrbits(document.getElementById("craftStage"), "img/craft/");
